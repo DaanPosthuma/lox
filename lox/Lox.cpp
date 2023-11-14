@@ -1,6 +1,9 @@
 ﻿#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <string>
 #include <string>
+
 #include "Scanner.h"
 #include "Token.h"
 #include "Lox.h"
@@ -28,7 +31,10 @@ namespace {
 	}
 
 	void runFile(std::string fileName) {
-		throw std::exception("runFile not supported yet!");
+		std::ifstream t(fileName);
+		std::stringstream buffer;
+		buffer << t.rdbuf();
+		run(buffer.str());
 	}
 
 	void runPrompt() {
