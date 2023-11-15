@@ -46,7 +46,6 @@ namespace {
 			run(line);
 		}
 	}
-
 }
 
 int main(int argc, char* argv[])
@@ -55,6 +54,7 @@ int main(int argc, char* argv[])
 
 		if (argc > 2) {
 			std::cout << "Usage: lox [script]" << std::endl;
+			return EXIT_FAILURE;
 		}
 		else if (argc == 2) {
 			runFile(argv[1]);

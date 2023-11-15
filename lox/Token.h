@@ -14,6 +14,7 @@ public:
         int line) : mTokenType(tokenType), mLexeme(lexeme), mLiteral(literal), mLine(line) {}
     
     std::string toString() const;
+    std::string const& getLexeme() const { return mLexeme; }
 
 private:
 
