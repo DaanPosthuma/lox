@@ -152,6 +152,7 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"nil", TokenType::NIL},
     {"or", TokenType::OR},
     {"print", TokenType::PRINT},
+    {"PT", TokenType::PRINT_TOKENS},
     {"return", TokenType::RETURN},
     {"super", TokenType::SUPER},
     {"this", TokenType::THIS},

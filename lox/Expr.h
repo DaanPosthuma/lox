@@ -4,12 +4,16 @@
 
 class Expr {
 public:
+    Expr() = default;
+    Expr(Expr const&) = delete;
+    Expr& operator=(Expr const&) = delete;
+
     virtual ~Expr() = default;
 };
 
 class BinaryExpr : public Expr {
 public:
-    BinaryExpr(Expr* const left, Token const& operatr, Expr* const right) : mLeft(left), mOperator(operatr), mRight(right) {}
+    BinaryExpr(Expr* const left, Token const& operatr, Expr* const right);
 
     Expr const& getLeft() const { return *mLeft; }
     Token const& getOperator() const { return mOperator; }
@@ -23,8 +27,8 @@ private:
 
 class UnaryExpr : public Expr {
 public:
-    UnaryExpr(Token const& operatr, Expr* const right) : mOperator(operatr), mRight(right) {}
-
+    UnaryExpr(Token const& operatr, Expr* const right);
+    
     Token const& getOperator() const { return mOperator; }
     Expr const& getRight() const { return *mRight; }
 
@@ -35,7 +39,7 @@ private:
 
 class GroupingExpr : public Expr {
 public:
-    GroupingExpr(Expr* const expression) : mExpression(expression) {}
+    GroupingExpr(Expr* const expression);
 
     Expr const& getExpression() const { return *mExpression; }
 
@@ -45,7 +49,7 @@ private:
 
 class LiteralExpr : public Expr {
 public:
-    LiteralExpr(Object const& value) : mValue(value) {}
+    LiteralExpr(Object const& value);
 
     Object const& getValue() const { return mValue; }
 

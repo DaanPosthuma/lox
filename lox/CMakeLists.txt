@@ -1,4 +1,4 @@
-﻿add_executable (lox "Lox.cpp" "ExprToString.cpp" "Scanner.cpp" "TokenType.cpp" "Token.cpp" "Token.h" "TokenType.h"  "Scanner.h" "Lox.h" "Object.h" "Expr.h" "ExprToString.h" "Dispatcher.h")
+﻿add_executable (lox "Lox.cpp" "ExprToString.cpp" "Expr.cpp" "Scanner.cpp" "TokenType.cpp" "Token.cpp" "Parser.cpp")
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET lox PROPERTY CXX_STANDARD 23)
