@@ -2,6 +2,38 @@
 #include "Token.h"
 #include "TokenType.h"
 #include "Lox.h"
+#include <unordered_map>
+
+class Scanner {
+public:
+    Scanner(std::string const& source) : mSource(source) {}
+    std::vector<Token> const& scanTokens();
+
+private:
+
+    void scanToken();
+
+    bool isAtEnd() const;
+    char advance();
+
+    void addToken(TokenType type, Object literal = {});
+    bool match(char expected);
+    char peek() const;
+    char peekNext() const;
+    void string();
+    void number();
+    void identifier();
+
+    std::string mSource;
+    std::vector<Token> mTokens;
+
+    int mStart = 0;
+    int mCurrent = 0;
+    int mLine = 1;
+
+    static std::unordered_map<std::string, TokenType> keywords;
+};
+
 
 std::vector<Token> const& Scanner::scanTokens()
 {
@@ -77,8 +109,13 @@ char Scanner::advance() {
 }
 
 void Scanner::addToken(TokenType type, Object literal) {
-    auto const text = mSource.substr(mStart, mCurrent - mStart);
-    mTokens.push_back(Token(type, text, literal, mLine));
+    if (type == TokenType::ENABLE_DEBUG) {
+        Lox::debugEnabled = true;
+    }
+    else {
+        auto const text = mSource.substr(mStart, mCurrent - mStart);
+        mTokens.push_back(Token(type, text, literal, mLine));
+    }
 }
 
 bool Scanner::match(char expected) {
@@ -151,7 +188,7 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"nil", TokenType::NIL},
     {"or", TokenType::OR},
     {"print", TokenType::PRINT},
-    {"PT", TokenType::PRINT_TOKENS},
+    {"DEBUG", TokenType::ENABLE_DEBUG},
     {"return", TokenType::RETURN},
     {"super", TokenType::SUPER},
     {"this", TokenType::THIS},
@@ -159,3 +196,7 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"var", TokenType::VAR},
     {"while", TokenType::WHILE}
 };
+
+std::vector<Token> scanTokens(std::string const& source) {
+    return Scanner(source).scanTokens();
+}
