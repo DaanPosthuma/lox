@@ -46,11 +46,10 @@ void Scanner::scanToken() {
         else {
             addToken(TokenType::SLASH);
         }
+        break;
     case ' ': [[fallthrough]];
     case '\r': [[fallthrough]];
-    case '\t':
-        // ignore whitespace
-        break;
+    case '\t': break;
     case '\n':
         mLine++;
         break;
