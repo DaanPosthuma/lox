@@ -1,6 +1,6 @@
 #include "TokenType.h"
 
-std::string toString(TokenType tokenType) {
+std::string toString(TokenType tokenType) noexcept {
     switch (tokenType) {
     case TokenType::LEFT_PAREN: return "LEFT_PAREN";
     case TokenType::RIGHT_PAREN: return "RIGHT_PAREN";
@@ -42,6 +42,6 @@ std::string toString(TokenType tokenType) {
     case TokenType::VAR: return "VAR";
     case TokenType::WHILE: return "WHILE";
     case TokenType::END_OF_FILE: return "END_OF_FILE";
-    default: throw std::exception("Unknown token type");
+    default: return "Unknown token type";
     }
 }

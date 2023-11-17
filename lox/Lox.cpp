@@ -59,7 +59,10 @@ namespace {
         }
 
         auto const result = interpret(*expr);
-        std::cout << result.toString() << std::endl;
+        if (result.isString())
+            std::cout << '"' << result.toString() << '"' << std::endl;
+        else
+            std::cout << result.toString() << std::endl;
     }
 
     void runFile(std::string fileName) {

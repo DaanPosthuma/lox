@@ -4,65 +4,69 @@
 #include "Expr.h"
 #include "Lox.h"
 
-class ParseError {};
+namespace {
+    struct ParseError {
+        Token token;
+        std::string message;
+    };
 
-class Parser {
-public:
-    Parser(std::vector<Token> const& tokens) : mTokens(tokens) {}
-    Expr* parse();
+    class Parser {
+    public:
+        Parser(std::vector<Token> const& tokens) : mTokens(tokens) {}
+        Expr* parse();
 
-private:
-    Expr* expression();
-    Expr* equality();
-    Expr* comparison();
-    Expr* term();
-    Expr* factor();
-    Expr* unary();
-    Expr* primary();
+    private:
+        Expr* expression();
+        Expr* equality();
+        Expr* comparison();
+        Expr* term();
+        Expr* factor();
+        Expr* unary();
+        Expr* primary();
 
 
-    Token const& advance();
-    bool isAtEnd() const;
-    Token const& peek() const;
-    Token const& previous() const;
+        Token const& advance();
+        bool isAtEnd() const;
+        Token const& peek() const;
+        Token const& previous() const;
 
-    template <TokenType T>
-    bool check() {
-        if (isAtEnd()) return false;
-        return peek().getTokenType() == T;
-    }
-
-    template <TokenType T>
-    bool match() {
-        if (check<T>()) {
-            advance();
-            return true;
+        template <TokenType T>
+        bool check() {
+            if (isAtEnd()) return false;
+            return peek().getTokenType() == T;
         }
-        return false;
-    }
 
-    template <TokenType First, TokenType Second, TokenType... Rest>
-    bool match() {
-        return match<First>() || match<Second, Rest...>();
-    }
+        template <TokenType T>
+        bool match() {
+            if (check<T>()) {
+                advance();
+                return true;
+            }
+            return false;
+        }
 
-    template <TokenType T>
-    Token const& consume(std::string const& message) {
-        if (check<T>()) return advance();
-        throw error(peek(), message);
-    }
+        template <TokenType First, TokenType Second, TokenType... Rest>
+        bool match() {
+            return match<First>() || match<Second, Rest...>();
+        }
 
-    ParseError error(Token const& token, std::string const& message) const;
+        template <TokenType T>
+        Token const& consume(std::string const& message) {
+            if (check<T>()) return advance();
+            throw ParseError(peek(), message);
+        }
 
-    std::vector<Token> mTokens;
-    int mCurrent = 0;
-};
+        std::vector<Token> mTokens;
+        int mCurrent = 0;
+    };
+}
 
 Expr* Parser::parse() {
     try {
         return expression();
     }
-    catch (ParseError const&) {
+    catch (ParseError const& error) {
+        Lox::error(error.token, error.message);
         return nullptr;
     }
 }
@@ -143,7 +147,7 @@ Expr* Parser::primary() {
         return new GroupingExpr(expr);
     }
 
-    throw error(peek(), "Expect expression.");
+    throw ParseError(peek(), "Expect expression.");
 }
 
 Token const& Parser::advance() {
@@ -161,11 +165,6 @@ Token const& Parser::peek() const {
 
 Token const& Parser::previous() const {
     return mTokens.at(mCurrent - 1);
-}
-
-ParseError Parser::error(Token const& token, std::string const& message) const {
-    Lox::error(token, message);
-    return ParseError();
 }
 
 Expr* parse(std::vector<Token> const& tokens) {

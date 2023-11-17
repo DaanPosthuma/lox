@@ -24,4 +24,4 @@ enum class TokenType {
 
 };
 
-std::string toString(TokenType tokenType);
+std::string toString(TokenType tokenType) noexcept;

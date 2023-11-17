@@ -10,16 +10,16 @@ public:
     Object(bool boolean) : mType(Type::Boolean), mBoolean(boolean) {}
     Object() : mType(Type::Nil) {}
 
-    std::string toString() const { 
-        switch (mType) {
-        case Type::String: return mString;
-        case Type::Double: return std::to_string(mDouble);
-        case Type::Boolean: return mBoolean ? "true" : "false";
-        case Type::Nil: return "nil";
-        default: return "unknown type";
-        }
-        
-    }
+    std::string toString() const;
+
+    explicit operator std::string() const;
+    explicit operator double() const;
+    explicit operator bool() const;
+    
+    bool isString() const;
+    bool isDouble() const;
+    bool isBoolean() const;
+    bool isNil() const;
 
     friend bool operator == (Object const& lhs, Object const& rhs);
 
@@ -29,15 +29,11 @@ private:
         String, Double, Boolean, Nil
     };
 
+    std::string typeAsString() const noexcept;
+
     Type mType;
     std::string mString = {};
     double mDouble = 0.0;
     bool mBoolean = false;
 };
 
-inline bool operator == (Object const& lhs, Object const& rhs) {
-    return lhs.mType == rhs.mType && (
-        lhs.mType == Object::Type::Nil
-        || lhs.mType == Object::Type::Double && lhs.mDouble == rhs.mDouble
-        || lhs.mType == Object::Type::String && lhs.mString == rhs.mString);
-}
