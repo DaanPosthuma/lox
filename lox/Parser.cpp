@@ -2,6 +2,7 @@
 #include "Token.h"
 #include "TokenType.h"
 #include "Expr.h"
+#include "Stmt.h"
 #include "Lox.h"
 
 namespace {
@@ -13,10 +14,16 @@ namespace {
     class Parser {
     public:
         Parser(std::vector<Token> const& tokens) : mTokens(tokens) {}
-        Expr* parse();
+        std::vector<Stmt*> parse();
 
     private:
+        Stmt* declaration();
+        Stmt* varDeclaration();
+        Stmt* statement();
+        Stmt* printStatement();
+        Stmt* expressionStatement();
         Expr* expression();
+        Expr* assignment();
         Expr* equality();
         Expr* comparison();
         Expr* term();
@@ -24,6 +31,7 @@ namespace {
         Expr* unary();
         Expr* primary();
 
+        void synchronise();
 
         Token const& advance();
         bool isAtEnd() const;
@@ -61,18 +69,69 @@ namespace {
     };
 }
 
-Expr* Parser::parse() {
-    try {
-        return expression();
+std::vector<Stmt*> Parser::parse() {
+    auto statements = std::vector<Stmt*>();
+    while (!isAtEnd()) {
+        statements.push_back(declaration());
     }
-    catch (ParseError const& error) {
-        Lox::error(error.token, error.message);
-        return nullptr;
-    }
+    return statements;
+}
+
+Stmt* Parser::declaration() {
+    //try {
+        if (match<TokenType::VAR>()) return varDeclaration();
+        return statement();
+    //}
+    //catch (ParseError const& error) {
+    //    synchronise();
+    //    return nullptr;
+    //}
+}
+
+Stmt* Parser::varDeclaration() {
+    auto const& name = consume<TokenType::IDENTIFIER>("Expect variable name");
+    Expr* const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
+    consume<TokenType::SEMICOLON>("Expect ';' after variable declaration.");
+    return new VarStmt(name, initializer);
+}
+
+Stmt* Parser::statement() {
+    if (match<TokenType::PRINT>()) return printStatement();
+    return expressionStatement();
+}
+
+Stmt* Parser::printStatement() {
+    auto const value = expression();
+    consume<TokenType::SEMICOLON>("Expect ';' after value.");
+    return new PrintStmt(value);
+}
+
+Stmt* Parser::expressionStatement() {
+    auto const expr = expression();
+    consume<TokenType::SEMICOLON>("Expect ';' after expression.");
+    return new ExpressionStmt(expr);
 }
 
 Expr* Parser::expression() {
-    return equality();
+    return assignment();
+}
+
+Expr* Parser::assignment() {
+    auto const expr = equality();
+
+    if (match<TokenType::EQUAL>()) {
+        auto const equals = previous();
+        auto const value = assignment();
+
+        if (auto const variableExpr = dynamic_cast<VariableExpr*>(expr)) {
+            auto const name = variableExpr->getName();
+            return new AssignExpr(name, value);
+        }
+
+        throw ParseError(equals, "Invalid assignment target.");
+    }
+
+    return expr;
 }
 
 Expr* Parser::equality() {
@@ -141,6 +200,10 @@ Expr* Parser::primary() {
         return new LiteralExpr(previous().getLiteral());
     }
 
+    if (match<TokenType::IDENTIFIER>()) {
+        return new VariableExpr(previous());
+    }
+
     if (match<TokenType::LEFT_PAREN>()) {
         auto const expr = expression();
         consume<TokenType::RIGHT_PAREN>("Expect ')' after expression.");
@@ -148,6 +211,27 @@ Expr* Parser::primary() {
     }
 
     throw ParseError(peek(), "Expect expression.");
+}
+
+void Parser::synchronise() {
+    advance();
+    while (!isAtEnd()) {
+        if (previous().getTokenType() == TokenType::SEMICOLON) return;
+        
+        switch (peek().getTokenType()) {
+        case TokenType::CLASS:
+        case TokenType::FOR:
+        case TokenType::FUN:
+        case TokenType::IF:
+        case TokenType::PRINT:
+        case TokenType::RETURN:
+        case TokenType::VAR:
+        case TokenType::WHILE:
+            return;
+        }
+
+        advance();
+    }
 }
 
 Token const& Parser::advance() {
@@ -167,7 +251,13 @@ Token const& Parser::previous() const {
     return mTokens.at(mCurrent - 1);
 }
 
-Expr* parse(std::vector<Token> const& tokens) {
-    auto parser = Parser(tokens);
-    return parser.parse();
+std::vector<Stmt*> parse(std::vector<Token> const& tokens) {
+    try {
+        auto parser = Parser(tokens);
+        return parser.parse();
+    }
+    catch (ParseError const& error) {
+        Lox::error(error.token, error.message);
+        return {};
+    }
 }

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-class Expr;
+class Stmt;
 class Token;
 
-Expr* parse(std::vector<Token> const& tokens);
+std::vector<Stmt*> parse(std::vector<Token> const& tokens);

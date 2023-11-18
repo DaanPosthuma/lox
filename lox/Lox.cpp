@@ -5,6 +5,7 @@
 #include "Parser.h"
 #include "ExprToString.h"
 #include "Interpreter.h"
+#include "Environment.h"
 
 #include <iostream>
 #include <fstream>
@@ -37,7 +38,7 @@ bool Lox::debugEnabled = false;
 
 namespace {
 
-    void run(std::string source) {
+    void run(std::string source, Environment& environment) {
 
         auto const tokens = scanTokens(source);
 
@@ -47,38 +48,33 @@ namespace {
             std::cout << std::endl;
         }
 
-        auto const expr = parse(tokens);
-
+        auto const statements = parse(tokens);
         if (Lox::hadError) return;
 
-        assert(expr && "Parser returned nullptr but no error reported! This should never happen!!!");
-
         if (Lox::debugEnabled) {
-            std::cout << "Syntax tree: ";
-            std::cout << toString(*expr) << std::endl;
+            std::cout << "Num statements: " << statements.size() << std::endl;
         }
 
-        auto const result = interpret(*expr);
-        if (result.isString())
-            std::cout << '"' << result.toString() << '"' << std::endl;
-        else
-            std::cout << result.toString() << std::endl;
+        interpret(statements, environment);
+
     }
 
     void runFile(std::string fileName) {
         std::ifstream t(fileName);
         std::stringstream buffer;
         buffer << t.rdbuf();
-        run(buffer.str());
+        auto environment = Environment();
+        run(buffer.str(), environment);
     }
 
     void runPrompt() {
+        auto environment = Environment();
         while (true) {
             std::cout << "> ";
             std::string line;
             getline(std::cin, line);
             if (line == "exit" || line == "q") return;
-            run(line);
+            run(line, environment);
             Lox::hadError = false;
         }
     }

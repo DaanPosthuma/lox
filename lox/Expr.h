@@ -56,3 +56,25 @@ public:
 private:
     Object mValue;
 };
+
+class VariableExpr : public Expr {
+public:
+    VariableExpr(Token const& name);
+
+    Token const& getName() const { return mName; }
+
+private:
+    Token mName;
+};
+
+class AssignExpr : public Expr {
+public:
+    AssignExpr(Token const& name, Expr* const value);
+
+    Token const& getName() const { return mName; }
+    Expr const& getValue() const { return *mValue; }
+
+private:
+    Token mName;
+    Expr* mValue;
+};

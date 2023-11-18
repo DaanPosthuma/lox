@@ -1,6 +1,8 @@
 #pragma once
 
-class Object;
-class Expr;
+#include <vector>
 
-Object interpret(Expr const& expr);
+class Stmt;
+class Environment;
+
+void interpret(std::vector<Stmt*> const& statements, Environment& environment);

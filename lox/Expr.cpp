@@ -15,3 +15,9 @@ GroupingExpr::GroupingExpr(Expr* const expression) : mExpression(expression) {
 }
 
 LiteralExpr::LiteralExpr(Object const& value) : mValue(value) {}
+
+VariableExpr::VariableExpr(Token const& name) : mName(name) {}
+
+AssignExpr::AssignExpr(Token const& name, Expr* const value) : mName(name), mValue(value) {
+    assert(value && "AssignExpr ctor: value cannot be nullptr");
+}
