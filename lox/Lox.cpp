@@ -6,7 +6,6 @@
 #include "ExprToString.h"
 #include "Interpreter.h"
 #include "Environment.h"
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -14,6 +13,8 @@
 #include <string>
 #include <cassert>
 #include <algorithm>
+#include <chrono>
+
 
 void Lox::error(int line, std::string message) {
     report(line, "", message);
@@ -40,23 +41,37 @@ namespace {
 
     void run(std::string source, Environment& environment) {
 
+        auto const tScanTokensStart = std::chrono::high_resolution_clock::now();
         auto const tokens = scanTokens(source);
+        auto const tScanTokensEnd = std::chrono::high_resolution_clock::now();
 
         if (Lox::debugEnabled) {
             std::cout << "Tokens: ";
             std::ranges::for_each(tokens, [first = true](Token const& token) mutable { std::cout << (first ? "" : ", ") << "[" << token.toString() << "]"; first = false; });
             std::cout << std::endl;
         }
-
+        
+        auto const tParseStart = std::chrono::high_resolution_clock::now();
         auto const statements = parse(tokens);
-        if (Lox::hadError) return;
+        auto const tParseEnd = std::chrono::high_resolution_clock::now();
 
         if (Lox::debugEnabled) {
             std::cout << "Num statements: " << statements.size() << std::endl;
         }
 
-        interpret(statements, environment);
+        auto const tInterpretStart = std::chrono::high_resolution_clock::now();
+        auto const result = Lox::hadError ? Object{} : interpret(statements, environment);
+        auto const tInterpretEnd = std::chrono::high_resolution_clock::now();
 
+        if (!result.isNil()) {
+            std::cout << result.toString() << std::endl;
+        }
+
+        if (Lox::debugEnabled) {
+            std::cout << "Scanner: " << std::chrono::duration_cast<std::chrono::microseconds>(tScanTokensEnd - tScanTokensStart) << std::endl;
+            std::cout << "Parser: " << std::chrono::duration_cast<std::chrono::microseconds>(tParseEnd - tParseStart) << std::endl;
+            std::cout << "Interpreter: " << std::chrono::duration_cast<std::chrono::microseconds>(tInterpretEnd - tInterpretStart) << std::endl;
+        }
     }
 
     void runFile(std::string fileName) {

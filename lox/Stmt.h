@@ -1,5 +1,6 @@
 #pragma once
 #include "Token.h"
+#include <vector>
 
 class Expr;
 
@@ -42,3 +43,11 @@ private:
     Expr* mInitializer;
 };
 
+class BlockStmt : public Stmt {
+public:
+    BlockStmt(std::vector<Stmt*> const& statements);
+    std::vector<Stmt*> const& getStatements() const { return mStatements; }
+
+private:
+    std::vector<Stmt*> mStatements;
+};

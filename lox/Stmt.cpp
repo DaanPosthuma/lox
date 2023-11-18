@@ -12,3 +12,6 @@ PrintStmt::PrintStmt(Expr* expression) : mExpression(expression) {
 VarStmt::VarStmt(Token const& token, Expr* initializer) : mToken(token), mInitializer(initializer) {
     assert(initializer && "VarStmt ctor: initializer cannot be nullptr");
 }
+
+BlockStmt::BlockStmt(std::vector<Stmt*> const& statements) : mStatements(statements) {
+}

@@ -10,8 +10,11 @@
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 
 namespace {
+
+    // Utility functions used in the concrete execute/evaluate functions
 
     bool isTruthy(Object const& object) {
         if (object.isNil()) return false;
@@ -27,8 +30,8 @@ namespace {
         if (!left.isDouble() || !right.isDouble()) throw RuntimeError(token, "Operands must be numbers.");
     }
 
-    // forward declaration of generic execute/evaluate:
-    void execute(Stmt const& statement, Environment& environment);
+    // Forward declaration of generic execute/evaluate:
+    Object execute(Stmt const& statement, Environment& environment);
     Object evaluate(Expr const& expr, Environment& environment);
 
     // Evaluate functions of concrete expressions:
@@ -109,18 +112,30 @@ namespace {
     }
 
     // Execute functions of concrete statements:
-    void executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment) {
-        evaluate(stmt.getExpression(), environment);
+    Object executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment) {
+        return evaluate(stmt.getExpression(), environment);
     }
 
-    void executePrintStmt(PrintStmt const& stmt, Environment& environment) {
+    Object executePrintStmt(PrintStmt const& stmt, Environment& environment) {
         auto const value = evaluate(stmt.getExpression(), environment);
         std::cout << value.toString() << std::endl;
+        return {};
     }
 
-    void executeVarStmt(VarStmt const& stmt, Environment& environment) {
+    Object executeVarStmt(VarStmt const& stmt, Environment& environment) {
         auto const value = evaluate(stmt.getInitializer(), environment);
         environment.define(stmt.getToken().getLexeme(), value);
+        return {};
+    }
+
+    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
+        auto blockEnvironment = Environment(environment);
+        auto result = Object{};
+        std::ranges::for_each(stmt.getStatements(), [&](auto const* stmt) {
+            assert(stmt && "Statement cannot be null.");
+            result = execute(*stmt, blockEnvironment);
+            });
+        return result;
     }
 
     // Evaluate function of generic expression:
@@ -144,28 +159,32 @@ namespace {
     // Execute function of generic statement:
 
     template <typename T>
-    using ExecuteStmtFuncT = std::function<void(T const&, Environment& environment)>;
+    using ExecuteStmtFuncT = std::function<Object(T const&, Environment& environment)>;
 
-    void execute(Stmt const& statement, Environment& environment) {
-        static auto const executeDispatcher = Dispatcher<void, Stmt const&, Environment&>(
+    Object execute(Stmt const& statement, Environment& environment) {
+        static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&>(
             ExecuteStmtFuncT<ExpressionStmt>(executeExpressionStmt),
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),
-            ExecuteStmtFuncT<VarStmt>(executeVarStmt)
+            ExecuteStmtFuncT<VarStmt>(executeVarStmt),
+            ExecuteStmtFuncT<BlockStmt>(executeBlockStmt)
         );
 
         return executeDispatcher.dispatch(statement, environment);
     }
 }
 
-void interpret(std::vector<Stmt*> const& statements, Environment& environment) {
+Object interpret(std::vector<Stmt*> const& statements, Environment& environment) {
     try {
+        auto result = Object();
         for (auto const* statement : statements) {
             assert(statement && "Statement cannot be nullptr");
-            execute(*statement, environment);
+            result = execute(*statement, environment);
         }
+        return result;
     }
     catch (RuntimeError const& error) {
         Lox::error(error.token, error.message);
+        return {};
     }
 }
 

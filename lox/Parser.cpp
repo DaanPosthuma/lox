@@ -21,6 +21,7 @@ namespace {
         Stmt* varDeclaration();
         Stmt* statement();
         Stmt* printStatement();
+        Stmt* blockStatement();
         Stmt* expressionStatement();
         Expr* expression();
         Expr* assignment();
@@ -97,6 +98,7 @@ Stmt* Parser::varDeclaration() {
 
 Stmt* Parser::statement() {
     if (match<TokenType::PRINT>()) return printStatement();
+    if (match<TokenType::LEFT_BRACE>()) return blockStatement();
     return expressionStatement();
 }
 
@@ -104,6 +106,17 @@ Stmt* Parser::printStatement() {
     auto const value = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after value.");
     return new PrintStmt(value);
+}
+
+Stmt* Parser::blockStatement() {
+    auto statements = std::vector<Stmt*>();
+
+    while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
+        statements.push_back(declaration());
+    }
+    
+    consume<TokenType::RIGHT_BRACE>("Expect '}' after block.");
+    return new BlockStmt(statements);
 }
 
 Stmt* Parser::expressionStatement() {

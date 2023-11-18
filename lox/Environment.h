@@ -7,10 +7,14 @@ class Token;
 
 class Environment {
 public:
+    Environment();
+    Environment(Environment& environment);
+
     void define(std::string const& name, Object const& value);
     Object get(Token const& name) const;
     void assign(Token const& name, Object const& value);
 
 private:
     std::unordered_map<std::string, Object> mValues;
+    Environment* mEnclosing;
 };
