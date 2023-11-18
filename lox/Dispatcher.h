@@ -4,27 +4,28 @@
 #include <unordered_map>
 #include <typeindex>
 #include <stdexcept>
+#include <utility>
 
 template <class ReturnType, class BaseType, class... Args>
 class Dispatcher {
 public:
 
     template <class... ConcreteTypes>
-    Dispatcher(std::function<ReturnType(ConcreteTypes const&, Args...)>&&... concreteFunctions)
+    Dispatcher(std::function<ReturnType(ConcreteTypes, Args...)>&&... concreteFunctions)
     {
-        (add<ConcreteTypes>(concreteFunctions), ...);
+        (add<ConcreteTypes>(std::forward<decltype(concreteFunctions)>(concreteFunctions)), ...);
     }
 
     template <class ConcreteType>
-    void add(std::function<ReturnType(ConcreteType const&, Args...)> concreteFunction) {
+    void add(std::function<ReturnType(ConcreteType, Args...)>&& concreteFunction) {
         mDispatcher.emplace(
-            typeid(ConcreteType const&),
-            [=](BaseType const& base, Args... args) {
-                return concreteFunction(dynamic_cast<ConcreteType const&>(base), args...);
+            typeid(ConcreteType),
+            [=](BaseType base, Args... args) {
+                return concreteFunction(dynamic_cast<ConcreteType>(base), args...);
             });
     }
 
-    ReturnType dispatch(BaseType const& object, Args... args) const {
+    ReturnType dispatch(BaseType object, Args... args) const {
 
         if (auto it = mDispatcher.find(typeid(object)); it != mDispatcher.end()) {
             return it->second(object, args...);
@@ -36,5 +37,5 @@ public:
     }
 
 private:
-    std::unordered_map<std::type_index, std::function<ReturnType(BaseType const&, Args...)>> mDispatcher;
+    std::unordered_map<std::type_index, std::function<ReturnType(BaseType, Args...)>> mDispatcher;
 };

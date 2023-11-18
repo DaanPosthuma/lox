@@ -90,7 +90,7 @@ Stmt* Parser::declaration() {
 
 Stmt* Parser::varDeclaration() {
     auto const& name = consume<TokenType::IDENTIFIER>("Expect variable name");
-    Expr* const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
+    auto const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
     consume<TokenType::SEMICOLON>("Expect ';' after variable declaration.");
     return new VarStmt(name, initializer);
 }
@@ -135,7 +135,7 @@ Expr* Parser::assignment() {
 }
 
 Expr* Parser::equality() {
-    Expr* expr = comparison();
+    auto expr = comparison();
     while (match<TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL>()) {
         auto const operatr = previous();
         auto const right = comparison();

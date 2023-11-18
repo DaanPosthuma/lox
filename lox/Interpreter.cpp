@@ -129,7 +129,7 @@ namespace {
     using EvaluateExprFuncT = std::function<Object(T const&, Environment&)>;
 
     Object evaluate(Expr const& expr, Environment& environment) {
-        static auto const evaluateDispatcher = Dispatcher<Object, Expr, Environment&>(
+        static auto const evaluateDispatcher = Dispatcher<Object, Expr const&, Environment&>(
             EvaluateExprFuncT<BinaryExpr>(evaluateBinaryExpr),
             EvaluateExprFuncT<GroupingExpr>(evaluateGroupingExpr),
             EvaluateExprFuncT<LiteralExpr>(evaluateLiteralExpr),
@@ -147,7 +147,7 @@ namespace {
     using ExecuteStmtFuncT = std::function<void(T const&, Environment& environment)>;
 
     void execute(Stmt const& statement, Environment& environment) {
-        static auto const executeDispatcher = Dispatcher<void, Stmt, Environment&>(
+        static auto const executeDispatcher = Dispatcher<void, Stmt const&, Environment&>(
             ExecuteStmtFuncT<ExpressionStmt>(executeExpressionStmt),
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),
             ExecuteStmtFuncT<VarStmt>(executeVarStmt)
