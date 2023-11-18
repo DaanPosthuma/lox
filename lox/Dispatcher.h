@@ -4,7 +4,6 @@
 #include <unordered_map>
 #include <typeindex>
 #include <stdexcept>
-#include <utility>
 
 template <class ReturnType, class BaseType, class... Args>
 class Dispatcher {
@@ -20,8 +19,8 @@ public:
     void add(std::function<ReturnType(ConcreteType, Args...)>&& concreteFunction) {
         mDispatcher.emplace(
             typeid(ConcreteType),
-            [=](BaseType base, Args... args) {
-                return concreteFunction(dynamic_cast<ConcreteType>(base), args...);
+            [=](BaseType base, Args&&... args) {
+                return concreteFunction(dynamic_cast<ConcreteType>(base), std::forward<Args>(args)...);
             });
     }
 
