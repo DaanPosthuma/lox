@@ -110,15 +110,48 @@ namespace {
         environment.assign(expr.getName(), value);
         return value;
     }
+    
+    Object evaluateLogicalExpr(LogicalExpr const& expr, Environment& environment) {
+        auto const lhs = evaluate(expr.getLeft(), environment);
+
+        if (expr.getOperator().getTokenType() == TokenType::OR) {
+            if (isTruthy(lhs)) return lhs;
+        }
+        else { // AND
+            if (!isTruthy(lhs)) return lhs;
+        }
+
+        return evaluate(expr.getRight(), environment);
+    }
 
     // Execute functions of concrete statements:
+
     Object executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment) {
         return evaluate(stmt.getExpression(), environment);
+    }
+
+    Object executeIfStmt(IfStmt const& stmt, Environment& environment) {
+        auto const condition = evaluate(stmt.getCondition(), environment);
+        if (condition)
+        {
+            execute(stmt.getThenBranch(), environment);
+        }
+        else if (auto const elseBranch = stmt.getElseBranch()) {
+            execute(*elseBranch, environment);
+        }
+        return {};
     }
 
     Object executePrintStmt(PrintStmt const& stmt, Environment& environment) {
         auto const value = evaluate(stmt.getExpression(), environment);
         std::cout << value.toString() << std::endl;
+        return {};
+    }
+    
+    Object executeWhileStmt(WhileStmt const& stmt, Environment& environment) {
+        while (evaluate(stmt.getCondition(), environment)) {
+            execute(stmt.getBody(), environment);
+        }
         return {};
     }
 
@@ -150,7 +183,8 @@ namespace {
             EvaluateExprFuncT<LiteralExpr>(evaluateLiteralExpr),
             EvaluateExprFuncT<UnaryExpr>(evaluateUnaryExpr),
             EvaluateExprFuncT<VariableExpr>(evaluateVariableExpr),
-            EvaluateExprFuncT<AssignExpr>(evaluateAssignExpr)
+            EvaluateExprFuncT<AssignExpr>(evaluateAssignExpr),
+            EvaluateExprFuncT<LogicalExpr>(evaluateLogicalExpr)
         );
 
         return evaluateDispatcher.dispatch(expr, environment);
@@ -164,7 +198,9 @@ namespace {
     Object execute(Stmt const& statement, Environment& environment) {
         static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&>(
             ExecuteStmtFuncT<ExpressionStmt>(executeExpressionStmt),
+            ExecuteStmtFuncT<IfStmt>(executeIfStmt),
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),
+            ExecuteStmtFuncT<WhileStmt>(executeWhileStmt),
             ExecuteStmtFuncT<VarStmt>(executeVarStmt),
             ExecuteStmtFuncT<BlockStmt>(executeBlockStmt)
         );

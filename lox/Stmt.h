@@ -51,3 +51,29 @@ public:
 private:
     std::vector<Stmt*> mStatements;
 };
+
+class IfStmt : public Stmt {
+public:
+    IfStmt(Expr* condition, Stmt* const& thenBranch, Stmt* const& elseBranch);
+    Expr const& getCondition() const { return *mCondition; }
+    Stmt const& getThenBranch() const { return *mThenBranch; }
+    Stmt const* getElseBranch() const { return mElseBranch; }
+
+private:
+    Expr* mCondition;
+    Stmt* mThenBranch;
+    Stmt* mElseBranch;
+
+};
+
+class WhileStmt : public Stmt {
+public:
+    WhileStmt(Expr* condition, Stmt* const& body);
+    Expr const& getCondition() const { return *mCondition; }
+    Stmt const& getBody() const { return *mBody; }
+
+private:
+    Expr* mCondition;
+    Stmt* mBody;
+
+};

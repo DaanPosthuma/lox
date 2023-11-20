@@ -78,3 +78,17 @@ private:
     Token mName;
     Expr* mValue;
 };
+
+class LogicalExpr : public Expr {
+public:
+    LogicalExpr(Expr* const left, Token const& operatr, Expr* const right);
+
+    Expr const& getLeft() const { return *mLeft; }
+    Token const& getOperator() const { return mOperator; }
+    Expr const& getRight() const { return *mRight; }
+
+private:
+    Expr* mLeft;
+    Token mOperator;
+    Expr* mRight;
+};

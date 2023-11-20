@@ -21,3 +21,8 @@ VariableExpr::VariableExpr(Token const& name) : mName(name) {}
 AssignExpr::AssignExpr(Token const& name, Expr* const value) : mName(name), mValue(value) {
     assert(value && "AssignExpr ctor: value cannot be nullptr");
 }
+
+LogicalExpr::LogicalExpr(Expr* const left, Token const& operatr, Expr* const right) : mLeft(left), mOperator(operatr), mRight(right) {
+    assert(left && "LogicalExpr ctor: left cannot be nullptr");
+    assert(right && "LogicalExpr ctor: right cannot be nullptr");
+}

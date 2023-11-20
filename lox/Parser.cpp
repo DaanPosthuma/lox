@@ -20,11 +20,16 @@ namespace {
         Stmt* declaration();
         Stmt* varDeclaration();
         Stmt* statement();
+        Stmt* ifStatement();
         Stmt* printStatement();
+        Stmt* whileStatement();
+        Stmt* forStatement();
         Stmt* blockStatement();
         Stmt* expressionStatement();
         Expr* expression();
         Expr* assignment();
+        Expr* oor ();
+        Expr* aand ();
         Expr* equality();
         Expr* comparison();
         Expr* term();
@@ -40,7 +45,7 @@ namespace {
         Token const& previous() const;
 
         template <TokenType T>
-        bool check() {
+        bool check() const {
             if (isAtEnd()) return false;
             return peek().getTokenType() == T;
         }
@@ -97,15 +102,70 @@ Stmt* Parser::varDeclaration() {
 }
 
 Stmt* Parser::statement() {
+    if (match<TokenType::IF>()) return ifStatement();
+    if (match<TokenType::WHILE>()) return whileStatement();
+    if (match<TokenType::FOR>()) return forStatement();
     if (match<TokenType::PRINT>()) return printStatement();
     if (match<TokenType::LEFT_BRACE>()) return blockStatement();
     return expressionStatement();
+}
+
+Stmt* Parser::ifStatement() {
+    consume<TokenType::LEFT_PAREN>("Expect '(' after 'if'.");
+    auto const condition = expression();
+    consume<TokenType::RIGHT_PAREN>("Expect ')' after 'if'.");
+    auto const thenBranch = statement();
+    auto const elseBranch = match<TokenType::ELSE>() ? statement() : nullptr;
+    return new IfStmt(condition, thenBranch, elseBranch);
 }
 
 Stmt* Parser::printStatement() {
     auto const value = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after value.");
     return new PrintStmt(value);
+}
+
+Stmt* Parser::whileStatement() {
+    consume<TokenType::LEFT_PAREN>("Expect '(' after 'while'.");
+    auto const condition = expression();
+    consume<TokenType::RIGHT_PAREN>("Expect ')' after condition.");
+    auto const body = statement();
+    return new WhileStmt(condition, body);
+}
+
+Stmt* Parser::forStatement() {
+    consume<TokenType::LEFT_PAREN>("Expect '(' after 'for'.");
+    
+    Stmt* initializer;
+    if (match<TokenType::SEMICOLON>()) {
+        initializer = nullptr;
+    }
+    else if (match<TokenType::VAR>()) {
+        initializer = varDeclaration();
+    }
+    else {
+        initializer = expressionStatement();
+    }
+
+    auto const condition = check<TokenType::SEMICOLON>() ? new LiteralExpr(true) : expression();
+    consume<TokenType::SEMICOLON>("Expect ';' after condition.");
+
+    auto const increment = check<TokenType::RIGHT_PAREN>() ? nullptr: expression();
+    consume<TokenType::RIGHT_PAREN>("Expect ')' after for clause.");
+
+    auto body = statement();
+
+    if (increment) {
+        body = new BlockStmt({ body, new ExpressionStmt(increment) });
+    }
+
+    body = new WhileStmt(condition, body);
+    
+    if (initializer) {
+        body = new BlockStmt({ initializer, body });
+    }
+
+    return body;
 }
 
 Stmt* Parser::blockStatement() {
@@ -130,7 +190,7 @@ Expr* Parser::expression() {
 }
 
 Expr* Parser::assignment() {
-    auto const expr = equality();
+    auto const expr = oor();
 
     if (match<TokenType::EQUAL>()) {
         auto const equals = previous();
@@ -142,6 +202,29 @@ Expr* Parser::assignment() {
         }
 
         throw ParseError(equals, "Invalid assignment target.");
+    }
+
+    return expr;
+}
+
+Expr* Parser::oor() {
+    auto expr = aand();
+
+    while (match<TokenType::OR>()) {
+        auto const operatr = previous();
+        auto const right = aand();
+        expr = new LogicalExpr(expr, operatr, right);
+    }
+
+    return expr;
+}
+Expr* Parser::aand() {
+    auto expr = equality();
+
+    while (match<TokenType::AND>()) {
+        auto const operatr = previous();
+        auto const right = equality();
+        expr = new LogicalExpr(expr, operatr, right);
     }
 
     return expr;
