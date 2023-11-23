@@ -12,17 +12,17 @@ void Environment::define(std::string const& name, Object const& value) {
 }
 
 Object Environment::get(Token const& name) const {
-    if (auto it = mValues.find(name.getLexeme()); it != mValues.end()) {
+    if (auto it = mValues.find(name.lexeme()); it != mValues.end()) {
         return it->second;
     }
     if (mEnclosing) {
         return mEnclosing->get(name);
     }
-    throw RuntimeError(name, "Undefined variable '" + name.getLexeme() + "'.");
+    throw RuntimeError(name, "Undefined variable '" + name.lexeme() + "'.");
 }
 
 void Environment::assign(Token const& name, Object const& value) {
-    if (auto it = mValues.find(name.getLexeme()); it != mValues.end()) {
+    if (auto it = mValues.find(name.lexeme()); it != mValues.end()) {
         it->second = value;
         return;
     }
@@ -30,5 +30,5 @@ void Environment::assign(Token const& name, Object const& value) {
         mEnclosing->assign(name, value);
         return;
     }
-    throw RuntimeError(name, "Undefined variable '" + name.getLexeme() + "'.");
+    throw RuntimeError(name, "Undefined variable '" + name.lexeme() + "'.");
 }

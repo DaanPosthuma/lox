@@ -47,7 +47,7 @@ namespace {
         template <TokenType T>
         bool check() const {
             if (isAtEnd()) return false;
-            return peek().getTokenType() == T;
+            return peek().tokenType() == T;
         }
 
         template <TokenType T>
@@ -197,7 +197,7 @@ Expr* Parser::assignment() {
         auto const value = assignment();
 
         if (auto const variableExpr = dynamic_cast<VariableExpr*>(expr)) {
-            auto const name = variableExpr->getName();
+            auto const name = variableExpr->name();
             return new AssignExpr(name, value);
         }
 
@@ -293,7 +293,7 @@ Expr* Parser::primary() {
     if (match<TokenType::NIL>()) return new LiteralExpr({});
     
     if (match<TokenType::NUMBER, TokenType::STRING>()) {
-        return new LiteralExpr(previous().getLiteral());
+        return new LiteralExpr(previous().literal());
     }
 
     if (match<TokenType::IDENTIFIER>()) {
@@ -312,9 +312,9 @@ Expr* Parser::primary() {
 void Parser::synchronise() {
     advance();
     while (!isAtEnd()) {
-        if (previous().getTokenType() == TokenType::SEMICOLON) return;
+        if (previous().tokenType() == TokenType::SEMICOLON) return;
         
-        switch (peek().getTokenType()) {
+        switch (peek().tokenType()) {
         case TokenType::CLASS:
         case TokenType::FOR:
         case TokenType::FUN:
@@ -336,7 +336,7 @@ Token const& Parser::advance() {
 }
 
 bool Parser::isAtEnd() const{
-    return peek().getTokenType() == TokenType::END_OF_FILE;
+    return peek().tokenType() == TokenType::END_OF_FILE;
 }
 
 Token const& Parser::peek() const {

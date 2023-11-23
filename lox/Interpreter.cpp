@@ -36,11 +36,11 @@ namespace {
 
     // Evaluate functions of concrete expressions:
     Object evaluateBinaryExpr(BinaryExpr const& expr, Environment& environment) {
-        auto const left = evaluate(expr.getLeft(), environment);
-        auto const right = evaluate(expr.getRight(), environment);
-        auto const& operatr = expr.getOperator();
+        auto const left = evaluate(expr.left(), environment);
+        auto const right = evaluate(expr.right(), environment);
+        auto const& operatr = expr.operatr();
 
-        switch (operatr.getTokenType()) {
+        switch (operatr.tokenType()) {
         case TokenType::MINUS:
             checkNumberOperands(operatr, left, right);
             return (double)left - (double)right;
@@ -77,19 +77,19 @@ namespace {
             return (double)left <= (double)right;
         }
 
-        throw RuntimeError(expr.getOperator(), "Sorry I cannot do this!");
+        throw RuntimeError(expr.operatr(), "Sorry I cannot do this!");
     }
     Object evaluateGroupingExpr(GroupingExpr const& expr, Environment& environment) {
-        return evaluate(expr.getExpression(), environment);
+        return evaluate(expr.expression(), environment);
     }
     Object evaluateLiteralExpr(LiteralExpr const& expr, Environment& environment) {
-        return expr.getValue();
+        return expr.value();
     }
     Object evaluateUnaryExpr(UnaryExpr const& expr, Environment& environment) {
-        auto const right = evaluate(expr.getRight(), environment);
-        auto const& operatr = expr.getOperator();
+        auto const right = evaluate(expr.right(), environment);
+        auto const& operatr = expr.operatr();
 
-        switch (operatr.getTokenType()) {
+        switch (operatr.tokenType()) {
         case TokenType::BANG:
             return !isTruthy(right);
         case TokenType::MINUS:
@@ -102,69 +102,69 @@ namespace {
     }
 
     Object evaluateVariableExpr(VariableExpr const& expr, Environment& environment) {
-        return environment.get(expr.getName());
+        return environment.get(expr.name());
     }
 
     Object evaluateAssignExpr(AssignExpr const& expr, Environment& environment) {
-        auto const value = evaluate(expr.getValue(), environment);
-        environment.assign(expr.getName(), value);
+        auto const value = evaluate(expr.value(), environment);
+        environment.assign(expr.name(), value);
         return value;
     }
     
     Object evaluateLogicalExpr(LogicalExpr const& expr, Environment& environment) {
-        auto const lhs = evaluate(expr.getLeft(), environment);
+        auto const lhs = evaluate(expr.left(), environment);
 
-        if (expr.getOperator().getTokenType() == TokenType::OR) {
+        if (expr.operatr().tokenType() == TokenType::OR) {
             if (isTruthy(lhs)) return lhs;
         }
         else { // AND
             if (!isTruthy(lhs)) return lhs;
         }
 
-        return evaluate(expr.getRight(), environment);
+        return evaluate(expr.right(), environment);
     }
 
     // Execute functions of concrete statements:
 
     Object executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment) {
-        return evaluate(stmt.getExpression(), environment);
+        return evaluate(stmt.expression(), environment);
     }
 
     Object executeIfStmt(IfStmt const& stmt, Environment& environment) {
-        auto const condition = evaluate(stmt.getCondition(), environment);
+        auto const condition = evaluate(stmt.condition(), environment);
         if (condition)
         {
-            execute(stmt.getThenBranch(), environment);
+            execute(stmt.thenBranch(), environment);
         }
-        else if (auto const elseBranch = stmt.getElseBranch()) {
+        else if (auto const elseBranch = stmt.elseBranch()) {
             execute(*elseBranch, environment);
         }
         return {};
     }
 
     Object executePrintStmt(PrintStmt const& stmt, Environment& environment) {
-        auto const value = evaluate(stmt.getExpression(), environment);
+        auto const value = evaluate(stmt.expression(), environment);
         std::cout << value.toString() << std::endl;
         return {};
     }
     
     Object executeWhileStmt(WhileStmt const& stmt, Environment& environment) {
-        while (evaluate(stmt.getCondition(), environment)) {
-            execute(stmt.getBody(), environment);
+        while (evaluate(stmt.condition(), environment)) {
+            execute(stmt.body(), environment);
         }
         return {};
     }
 
     Object executeVarStmt(VarStmt const& stmt, Environment& environment) {
-        auto const value = evaluate(stmt.getInitializer(), environment);
-        environment.define(stmt.getToken().getLexeme(), value);
+        auto const value = evaluate(stmt.initializer(), environment);
+        environment.define(stmt.token().lexeme(), value);
         return {};
     }
 
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
         auto blockEnvironment = Environment(environment);
         auto result = Object{};
-        std::ranges::for_each(stmt.getStatements(), [&](auto const* stmt) {
+        std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
             assert(stmt && "Statement cannot be null.");
             result = execute(*stmt, blockEnvironment);
             });

@@ -6,19 +6,19 @@
 namespace {
 
     std::string binaryExprToString(BinaryExpr const& expr) {
-        return "(" + expr.getOperator().getLexeme() + " " + toString(expr.getLeft()) + " " + toString(expr.getRight()) + ")";
+        return "(" + expr.operatr().lexeme() + " " + toString(expr.left()) + " " + toString(expr.right()) + ")";
     }
 
     std::string groupingExprToString(GroupingExpr const& expr) {
-        return "(group " + toString(expr.getExpression()) + ")";
+        return "(group " + toString(expr.expression()) + ")";
     }
 
     std::string literalExprToString(LiteralExpr const& expr) {
-        return expr.getValue().toString();
+        return expr.value().toString();
     }
 
     std::string unaryExprToString(UnaryExpr const& expr) {
-        return "(" + expr.getOperator().getLexeme() + " " + toString(expr.getRight()) + ")";
+        return "(" + expr.operatr().lexeme() + " " + toString(expr.right()) + ")";
     }
 
 }

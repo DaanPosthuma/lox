@@ -14,10 +14,10 @@ public:
         int line) : mTokenType(tokenType), mLexeme(lexeme), mLiteral(literal), mLine(line) {}
     
     std::string toString() const;
-    TokenType getTokenType() const { return mTokenType; }
-    std::string const& getLexeme() const { return mLexeme; }
-    Object const& getLiteral() const { return mLiteral; }
-    int getLine() const { return mLine; }
+    TokenType tokenType() const { return mTokenType; }
+    std::string const& lexeme() const { return mLexeme; }
+    Object const& literal() const { return mLiteral; }
+    int line() const { return mLine; }
 
 private:
 

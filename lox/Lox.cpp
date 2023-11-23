@@ -26,11 +26,11 @@ void Lox::report(int line, std::string where, std::string message) {
 }
 
 void Lox::error(Token const& token, std::string const& message) {
-    if (token.getTokenType() == TokenType::END_OF_FILE) {
-        report(token.getLine(), " at end", message);
+    if (token.tokenType() == TokenType::END_OF_FILE) {
+        report(token.line(), " at end", message);
     }
     else {
-        report(token.getLine(), " at '" + token.getLexeme() + "'", message);
+        report(token.line(), " at '" + token.lexeme() + "'", message);
     }
 }
 

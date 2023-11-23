@@ -17,7 +17,7 @@ public:
 class ExpressionStmt : public Stmt {
 public:
     ExpressionStmt(Expr* expression);
-    Expr const& getExpression() const { return *mExpression; }
+    Expr const& expression() const { return *mExpression; }
 
 private:
     Expr* mExpression;
@@ -26,7 +26,7 @@ private:
 class PrintStmt : public Stmt {
 public:
     PrintStmt(Expr* expression);
-    Expr const& getExpression() const { return *mExpression; }
+    Expr const& expression() const { return *mExpression; }
 
 private:
     Expr* mExpression;
@@ -35,8 +35,8 @@ private:
 class VarStmt : public Stmt {
 public:
     VarStmt(Token const& token, Expr* initializer);
-    Token const& getToken() const { return mToken; }
-    Expr const& getInitializer() const { return *mInitializer; }
+    Token const& token() const { return mToken; }
+    Expr const& initializer() const { return *mInitializer; }
 
 private:
     Token mToken;
@@ -46,7 +46,7 @@ private:
 class BlockStmt : public Stmt {
 public:
     BlockStmt(std::vector<Stmt*> const& statements);
-    std::vector<Stmt*> const& getStatements() const { return mStatements; }
+    std::vector<Stmt*> const& statements() const { return mStatements; }
 
 private:
     std::vector<Stmt*> mStatements;
@@ -55,9 +55,9 @@ private:
 class IfStmt : public Stmt {
 public:
     IfStmt(Expr* condition, Stmt* const& thenBranch, Stmt* const& elseBranch);
-    Expr const& getCondition() const { return *mCondition; }
-    Stmt const& getThenBranch() const { return *mThenBranch; }
-    Stmt const* getElseBranch() const { return mElseBranch; }
+    Expr const& condition() const { return *mCondition; }
+    Stmt const& thenBranch() const { return *mThenBranch; }
+    Stmt const* elseBranch() const { return mElseBranch; }
 
 private:
     Expr* mCondition;
@@ -69,8 +69,8 @@ private:
 class WhileStmt : public Stmt {
 public:
     WhileStmt(Expr* condition, Stmt* const& body);
-    Expr const& getCondition() const { return *mCondition; }
-    Stmt const& getBody() const { return *mBody; }
+    Expr const& condition() const { return *mCondition; }
+    Stmt const& body() const { return *mBody; }
 
 private:
     Expr* mCondition;

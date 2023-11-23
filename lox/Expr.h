@@ -15,9 +15,9 @@ class BinaryExpr : public Expr {
 public:
     BinaryExpr(Expr* const left, Token const& operatr, Expr* const right);
 
-    Expr const& getLeft() const { return *mLeft; }
-    Token const& getOperator() const { return mOperator; }
-    Expr const& getRight() const { return *mRight; }
+    Expr const& left() const { return *mLeft; }
+    Token const& operatr() const { return mOperator; }
+    Expr const& right() const { return *mRight; }
 
 private:
     Expr* mLeft;
@@ -29,8 +29,8 @@ class UnaryExpr : public Expr {
 public:
     UnaryExpr(Token const& operatr, Expr* const right);
     
-    Token const& getOperator() const { return mOperator; }
-    Expr const& getRight() const { return *mRight; }
+    Token const& operatr() const { return mOperator; }
+    Expr const& right() const { return *mRight; }
 
 private:
     Token mOperator;
@@ -41,7 +41,7 @@ class GroupingExpr : public Expr {
 public:
     GroupingExpr(Expr* const expression);
 
-    Expr const& getExpression() const { return *mExpression; }
+    Expr const& expression() const { return *mExpression; }
 
 private:
     Expr* mExpression;
@@ -51,7 +51,7 @@ class LiteralExpr : public Expr {
 public:
     LiteralExpr(Object const& value);
 
-    Object const& getValue() const { return mValue; }
+    Object const& value() const { return mValue; }
 
 private:
     Object mValue;
@@ -61,7 +61,7 @@ class VariableExpr : public Expr {
 public:
     VariableExpr(Token const& name);
 
-    Token const& getName() const { return mName; }
+    Token const& name() const { return mName; }
 
 private:
     Token mName;
@@ -71,8 +71,8 @@ class AssignExpr : public Expr {
 public:
     AssignExpr(Token const& name, Expr* const value);
 
-    Token const& getName() const { return mName; }
-    Expr const& getValue() const { return *mValue; }
+    Token const& name() const { return mName; }
+    Expr const& value() const { return *mValue; }
 
 private:
     Token mName;
@@ -83,9 +83,9 @@ class LogicalExpr : public Expr {
 public:
     LogicalExpr(Expr* const left, Token const& operatr, Expr* const right);
 
-    Expr const& getLeft() const { return *mLeft; }
-    Token const& getOperator() const { return mOperator; }
-    Expr const& getRight() const { return *mRight; }
+    Expr const& left() const { return *mLeft; }
+    Token const& operatr() const { return mOperator; }
+    Expr const& right() const { return *mRight; }
 
 private:
     Expr* mLeft;
