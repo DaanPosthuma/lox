@@ -1,14 +1,18 @@
 #pragma once
 
 #include <string>
+#include <variant>
+
+class Nil {};
+inline bool operator == (Nil, Nil) { return true; }
 
 class Object {
 public:
 
-    Object(std::string string) : mType(Type::String), mString(string) {}
-    Object(double dbl) : mType(Type::Double), mDouble(dbl) {}
-    Object(bool boolean) : mType(Type::Boolean), mBoolean(boolean) {}
-    Object() : mType(Type::Nil) {}
+    Object(std::string string) : mData(string) {}
+    Object(double dbl) : mData(dbl) {}
+    Object(bool boolean) : mData(boolean) {}
+    Object() : mData(Nil{}) {}
 
     std::string toString() const;
 
@@ -24,16 +28,8 @@ public:
     friend bool operator == (Object const& lhs, Object const& rhs);
 
 private:
-
-    enum class Type {
-        String, Double, Boolean, Nil
-    };
-
     std::string typeAsString() const noexcept;
+    std::variant<std::string, double, bool, Nil> mData;
 
-    Type mType;
-    std::string mString = {};
-    double mDouble = 0.0;
-    bool mBoolean = false;
 };
 

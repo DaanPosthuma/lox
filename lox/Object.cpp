@@ -32,60 +32,52 @@ namespace {
 }
 
 std::string Object::toString() const {
-    switch (mType) {
-    case Type::String: return mString;
-    case Type::Double: return doubleToString(mDouble);
-    case Type::Boolean: return mBoolean ? "true" : "false";
-    case Type::Nil: return "nil";
-    default: return "unknown type";
-    }
-
+    if (std::holds_alternative<std::string>(mData)) return std::get<std::string>(mData);
+    else if (std::holds_alternative<double>(mData)) return doubleToString(std::get<double>(mData));
+    else if (std::holds_alternative<bool>(mData)) return std::get<bool>(mData) ? "true" : "false";
+    else if (std::holds_alternative<Nil>(mData)) return "Nil";
+    else return "unknown type";
 }
 
 Object::operator std::string() const {
-    if (mType != Type::String) throw std::runtime_error("Cannot convert " + typeAsString() + " to String");
-    return mString;
+    if (!isString()) throw std::runtime_error("Cannot convert " + typeAsString() + " to String");
+    return std::get<std::string>(mData);
 }
 
 Object::operator double() const {
-    if (mType != Type::Double) throw std::runtime_error("Cannot convert " + typeAsString() + " to Double");
-    return mDouble;
+    if (!isDouble()) throw std::runtime_error("Cannot convert " + typeAsString() + " to Double");
+    return std::get<double>(mData);
 }
 
 Object::operator bool() const {
-    if (mType != Type::Boolean) throw std::runtime_error("Cannot convert " + typeAsString() + " to Boolean");
-    return mBoolean;
+    if (!isBoolean()) throw std::runtime_error("Cannot convert " + typeAsString() + " to Boolean");
+    return std::get<bool>(mData);
 }
 
 bool Object::isString() const {
-    return mType == Type::String;
+    return std::holds_alternative<std::string>(mData);
 }
 
 bool Object::isDouble() const {
-    return mType == Type::Double;
+    return std::holds_alternative<double>(mData);
 }
 
 bool Object::isBoolean() const {
-    return mType == Type::Boolean;
+    return std::holds_alternative<bool>(mData);
 }
 
 bool Object::isNil() const {
-    return mType == Type::Nil;
+    return std::holds_alternative<Nil>(mData);
 }
 
 inline std::string Object::typeAsString() const noexcept {
-    switch (mType) {
-    case Type::String: return "String";
-    case Type::Double: return "Double";
-    case Type::Boolean: return "Boolean";
-    case Type::Nil: return "Nil";
-    default: return "Unknown type";
-    }
+    if (isString()) return "String";
+    else if (isDouble()) return "Double";
+    else if (isBoolean()) return "Boolean";
+    else if (isNil()) return "Nil";
+    else return "Unknown type";
 }
 
 bool operator==(Object const& lhs, Object const& rhs) {
-    return lhs.mType == rhs.mType && (
-        lhs.mType == Object::Type::Nil
-        || lhs.mType == Object::Type::Double && lhs.mDouble == rhs.mDouble
-        || lhs.mType == Object::Type::String && lhs.mString == rhs.mString);
+    return lhs.mData == rhs.mData;
 }
