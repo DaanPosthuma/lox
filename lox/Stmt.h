@@ -16,31 +16,31 @@ public:
 
 class ExpressionStmt : public Stmt {
 public:
-    ExpressionStmt(Expr* expression);
+    ExpressionStmt(Expr const* expression);
     Expr const& expression() const { return *mExpression; }
 
 private:
-    Expr* mExpression;
+    Expr const* mExpression;
 };
 
 class PrintStmt : public Stmt {
 public:
-    PrintStmt(Expr* expression);
+    PrintStmt(Expr const* expression);
     Expr const& expression() const { return *mExpression; }
 
 private:
-    Expr* mExpression;
+    Expr const* mExpression;
 };
 
 class VarStmt : public Stmt {
 public:
-    VarStmt(Token const& token, Expr* initializer);
+    VarStmt(Token const& token, Expr const* initializer);
     Token const& token() const { return mToken; }
     Expr const& initializer() const { return *mInitializer; }
 
 private:
     Token mToken;
-    Expr* mInitializer;
+    Expr const* mInitializer;
 };
 
 class BlockStmt : public Stmt {
@@ -54,13 +54,13 @@ private:
 
 class IfStmt : public Stmt {
 public:
-    IfStmt(Expr* condition, Stmt* const& thenBranch, Stmt* const& elseBranch);
+    IfStmt(Expr const* condition, Stmt* const& thenBranch, Stmt* const& elseBranch);
     Expr const& condition() const { return *mCondition; }
     Stmt const& thenBranch() const { return *mThenBranch; }
     Stmt const* elseBranch() const { return mElseBranch; }
 
 private:
-    Expr* mCondition;
+    Expr const* mCondition;
     Stmt* mThenBranch;
     Stmt* mElseBranch;
 
@@ -68,12 +68,12 @@ private:
 
 class WhileStmt : public Stmt {
 public:
-    WhileStmt(Expr* condition, Stmt* const& body);
+    WhileStmt(Expr const* condition, Stmt* const& body);
     Expr const& condition() const { return *mCondition; }
     Stmt const& body() const { return *mBody; }
 
 private:
-    Expr* mCondition;
+    Expr const* mCondition;
     Stmt* mBody;
 
 };

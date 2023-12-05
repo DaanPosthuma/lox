@@ -54,6 +54,11 @@ Object::operator bool() const {
     return std::get<bool>(mData);
 }
 
+Object::operator LoxCallable() const {
+    if (!isLoxCallable()) throw std::runtime_error("Cannot convert " + typeAsString() + " to LoxCallable");
+    return std::get<LoxCallable>(mData);
+}
+
 bool Object::isString() const {
     return std::holds_alternative<std::string>(mData);
 }
@@ -64,6 +69,10 @@ bool Object::isDouble() const {
 
 bool Object::isBoolean() const {
     return std::holds_alternative<bool>(mData);
+}
+
+bool Object::isLoxCallable() const {
+    return std::holds_alternative<LoxCallable>(mData);
 }
 
 bool Object::isNil() const {

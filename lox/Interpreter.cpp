@@ -7,6 +7,7 @@
 #include "Stmt.h"
 #include "RuntimeError.h"
 #include "Environment.h"
+#include "LoxCallable.h"
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
@@ -43,38 +44,38 @@ namespace {
         switch (operatr.tokenType()) {
         case TokenType::MINUS:
             checkNumberOperands(operatr, left, right);
-            return (double)left - (double)right;
+            return static_cast<double>(left) - static_cast<double>(right);
         case TokenType::PLUS:
             
             if (left.isString() || right.isString())
                 return left.toString() + right.toString();
 
             if (left.isDouble() && right.isDouble())
-                return (double)left + (double)right;
+                return static_cast<double>(left) + static_cast<double>(right);
 
             throw RuntimeError(operatr, "Cannot concatenate " + left.toString() + " and " + right.toString() + ".");
         case TokenType::SLASH:
             checkNumberOperands(operatr, left, right);
-            return (double)left / (double)right;
+            return static_cast<double>(left) / static_cast<double>(right);
         case TokenType::STAR:
             checkNumberOperands(operatr, left, right);
-            return (double)left * (double)right;
+            return static_cast<double>(left) * static_cast<double>(right);
         case TokenType::BANG_EQUAL:
             return left != right;
         case TokenType::EQUAL_EQUAL:
             return left == right;
         case TokenType::GREATER:
             checkNumberOperands(operatr, left, right);
-            return (double)left > (double)right;
+            return static_cast<double>(left) > static_cast<double>(right);
         case TokenType::GREATER_EQUAL:
             checkNumberOperands(operatr, left, right);
-            return (double)left >= (double)right;
+            return static_cast<double>(left) >= static_cast<double>(right);
         case TokenType::LESS:
             checkNumberOperands(operatr, left, right);
-            return (double)left < (double)right;
+            return static_cast<double>(left) < static_cast<double>(right);
         case TokenType::LESS_EQUAL:
             checkNumberOperands(operatr, left, right);
-            return (double)left <= (double)right;
+            return static_cast<double>(left) <= static_cast<double>(right);
         }
 
         throw RuntimeError(expr.operatr(), "Sorry I cannot do this!");
@@ -94,7 +95,7 @@ namespace {
             return !isTruthy(right);
         case TokenType::MINUS:
             checkNumberOperand(operatr, right);
-            return -(double)right;
+            return -static_cast<double>(right);
             break;
         default:
             throw std::logic_error("what happen?");
@@ -122,6 +123,24 @@ namespace {
         }
 
         return evaluate(expr.right(), environment);
+    }
+
+    Object evaluateCallExpr(CallExpr const& expr, Environment& environment) {
+        auto const callee = evaluate(expr.callee(), environment);
+        auto arguments = std::vector<Object>();
+        auto const proj = [&](Expr const* expr) { return evaluate(*expr, environment); };
+        std::ranges::transform(expr.arguments(), std::back_inserter(arguments), proj);
+
+        if (!callee.isLoxCallable()) {
+            throw RuntimeError(expr.paren(), "Operand must be a number.");
+        }
+        auto const& function = static_cast<LoxCallable>(callee);
+
+        if (function.arity() != arguments.size()) {
+            throw RuntimeError(expr.paren(), "Expected " + std::to_string(function.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
+        }
+
+        return function(arguments);
     }
 
     // Execute functions of concrete statements:
@@ -184,7 +203,8 @@ namespace {
             EvaluateExprFuncT<UnaryExpr>(evaluateUnaryExpr),
             EvaluateExprFuncT<VariableExpr>(evaluateVariableExpr),
             EvaluateExprFuncT<AssignExpr>(evaluateAssignExpr),
-            EvaluateExprFuncT<LogicalExpr>(evaluateLogicalExpr)
+            EvaluateExprFuncT<LogicalExpr>(evaluateLogicalExpr),
+            EvaluateExprFuncT<CallExpr>(evaluateCallExpr)
         );
 
         return evaluateDispatcher.dispatch(expr, environment);

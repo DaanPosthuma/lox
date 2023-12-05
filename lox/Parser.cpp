@@ -26,16 +26,18 @@ namespace {
         Stmt* forStatement();
         Stmt* blockStatement();
         Stmt* expressionStatement();
-        Expr* expression();
-        Expr* assignment();
-        Expr* oor ();
-        Expr* aand ();
-        Expr* equality();
-        Expr* comparison();
-        Expr* term();
-        Expr* factor();
-        Expr* unary();
-        Expr* primary();
+        Expr const* expression();
+        Expr const* assignment();
+        Expr const* oor ();
+        Expr const* aand ();
+        Expr const* equality();
+        Expr const* comparison();
+        Expr const* term();
+        Expr const* factor();
+        Expr const* unary();
+        Expr const* call();
+        Expr const* finishCall(Expr const* callee);
+        Expr const* primary();
 
         void synchronise();
 
@@ -185,18 +187,18 @@ Stmt* Parser::expressionStatement() {
     return new ExpressionStmt(expr);
 }
 
-Expr* Parser::expression() {
+Expr const* Parser::expression() {
     return assignment();
 }
 
-Expr* Parser::assignment() {
+Expr const* Parser::assignment() {
     auto const expr = oor();
 
     if (match<TokenType::EQUAL>()) {
         auto const equals = previous();
         auto const value = assignment();
 
-        if (auto const variableExpr = dynamic_cast<VariableExpr*>(expr)) {
+        if (auto const variableExpr = dynamic_cast<VariableExpr const*>(expr)) {
             auto const name = variableExpr->name();
             return new AssignExpr(name, value);
         }
@@ -207,7 +209,7 @@ Expr* Parser::assignment() {
     return expr;
 }
 
-Expr* Parser::oor() {
+Expr const* Parser::oor() {
     auto expr = aand();
 
     while (match<TokenType::OR>()) {
@@ -218,7 +220,7 @@ Expr* Parser::oor() {
 
     return expr;
 }
-Expr* Parser::aand() {
+Expr const* Parser::aand() {
     auto expr = equality();
 
     while (match<TokenType::AND>()) {
@@ -230,7 +232,7 @@ Expr* Parser::aand() {
     return expr;
 }
 
-Expr* Parser::equality() {
+Expr const* Parser::equality() {
     auto expr = comparison();
     while (match<TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL>()) {
         auto const operatr = previous();
@@ -241,7 +243,7 @@ Expr* Parser::equality() {
     return expr;
 }
 
-Expr* Parser::comparison() {
+Expr const* Parser::comparison() {
     auto expr = term();
 
     while (match<TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL>()) {
@@ -253,7 +255,7 @@ Expr* Parser::comparison() {
     return expr;
 }
 
-Expr* Parser::term() {
+Expr const* Parser::term() {
     auto expr = factor();
 
     while (match<TokenType::MINUS, TokenType::PLUS>()) {
@@ -265,7 +267,7 @@ Expr* Parser::term() {
     return expr;
 }
 
-Expr* Parser::factor() {
+Expr const* Parser::factor() {
     auto expr = unary();
 
     while (match<TokenType::SLASH, TokenType::STAR>()) {
@@ -277,17 +279,50 @@ Expr* Parser::factor() {
     return expr;
 }
 
-Expr* Parser::unary() {
+Expr const* Parser::unary() {
     if (match<TokenType::BANG, TokenType::MINUS>()) {
         auto const operatr = previous();
         auto const right = unary();
         return new UnaryExpr(operatr, right);
     }
 
-    return primary();
+    return call();
 }
 
-Expr* Parser::primary() {
+Expr const* Parser::call() {
+    auto expr = primary();
+
+    while (true) {
+        if (match<TokenType::LEFT_PAREN>()) {
+            expr = finishCall(expr);
+        }
+        else {
+            break;
+        }
+    }
+
+    return expr;
+}
+
+Expr const* Parser::finishCall(Expr const* callee) {
+    auto arguments = std::vector<Expr const*>();
+    if (!check<TokenType::RIGHT_PAREN>())
+    {
+        do {
+            if (arguments.size() >= 255) {
+                Lox::error(peek(), "Can't have more than 255 arguments.");
+            }
+            arguments.push_back(expression());
+        } while (match<TokenType::COMMA>());
+    }
+
+    auto const paren = consume<TokenType::RIGHT_PAREN>("Expect ')' after arguments.");
+
+    return new CallExpr(callee, paren, arguments);
+
+}   
+
+Expr const* Parser::primary() {
     if (match<TokenType::FALSE>()) return new LiteralExpr(false);
     if (match<TokenType::TRUE>()) return new LiteralExpr(true);
     if (match<TokenType::NIL>()) return new LiteralExpr({});

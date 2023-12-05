@@ -1,5 +1,6 @@
 #pragma once
 
+class Environment;
 #include <string>
 
 class Lox {
@@ -10,4 +11,6 @@ public:
 
     static bool hadError;
     static bool debugEnabled;
+    static Environment globals;
+    static Environment environment;
 };
