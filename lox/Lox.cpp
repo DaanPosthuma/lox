@@ -52,6 +52,21 @@ namespace {
             return "      __        \n w  c(..)o   (  \n  \\__(-)    __) \n      /\\   (    \n     /(_)___)   \n     w /|       \n      | \\       \n     m  m       "s;
         }, 0, "monkey (native)"));
 
+        Lox::globals.define("readString", LoxCallable([](std::vector<Object> const&) {
+            std::string s;
+            std::cin >> s;
+            return s;
+        }, 0, "readString (native)"));
+        
+        Lox::globals.define("subString", LoxCallable([](std::vector<Object> const& arguments) {
+            auto const string = static_cast<std::string>(arguments[0]);
+            auto const offd = static_cast<double>(arguments[1]);
+            auto const countd = static_cast<double>(arguments[2]);
+            auto const off = static_cast<int>(offd);
+            auto const count = static_cast<int>(countd);
+            return string.substr(off, count);
+        }, 3, "subString (native)"));
+
     }
 
     void run(std::string source) {
