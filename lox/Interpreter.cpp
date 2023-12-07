@@ -186,23 +186,23 @@ namespace {
     }
 
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
-        auto blockEnvironment = Environment(&environment);
+        auto blockEnvironment = new Environment(&environment);
         auto result = Object{};
         std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
             assert(stmt && "Statement cannot be null.");
-            result = execute(*stmt, blockEnvironment);
+            result = execute(*stmt, *blockEnvironment);
         });
         return result;
     }
 
     Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment) {
-        auto const function = LoxCallable([&stmt](std::vector<Object> const& arguments) {
-            auto environment = Environment(&Lox::globals);
+        auto const function = LoxCallable([&stmt, &environment](std::vector<Object> const& arguments) {
+            auto closure = new Environment(&environment);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
-                environment.define(param.lexeme(), arg);
+                closure->define(param.lexeme(), arg);
             }
             try {
-                executeBlockStmt(stmt.body(), environment);
+                executeBlockStmt(stmt.body(), *closure);
             }
             catch (Return const& ret) {
                 return ret.object;
