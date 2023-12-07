@@ -23,6 +23,7 @@ namespace {
         IfStmt const* ifStatement();
         PrintStmt const* printStatement();
         WhileStmt const* whileStatement();
+        ReturnStmt const* returnStatement();
         Stmt const* forStatement();
         BlockStmt const* blockStatement();
         ExpressionStmt const* expressionStatement();
@@ -110,6 +111,7 @@ Stmt const* Parser::statement() {
     if (match<TokenType::WHILE>()) return whileStatement();
     if (match<TokenType::FOR>()) return forStatement();
     if (match<TokenType::PRINT>()) return printStatement();
+    if (match<TokenType::RETURN>()) return returnStatement();
     if (match<TokenType::LEFT_BRACE>()) return blockStatement();
     return expressionStatement();
 }
@@ -135,6 +137,16 @@ WhileStmt const* Parser::whileStatement() {
     consume<TokenType::RIGHT_PAREN>("Expect ')' after condition.");
     auto const body = statement();
     return new WhileStmt(condition, body);
+}
+
+ReturnStmt const* Parser::returnStatement() {
+    auto const keyword = previous();
+    auto value = static_cast<Expr const*>(nullptr);
+    if (!check<TokenType::SEMICOLON>()) {
+        value = expression();
+    }
+    consume<TokenType::SEMICOLON>("Expect ';' after return value.");
+    return new ReturnStmt(keyword, value);
 }
 
 Stmt const* Parser::forStatement() {

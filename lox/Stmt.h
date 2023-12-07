@@ -88,3 +88,14 @@ private:
     BlockStmt mBody;
 
 };
+
+class ReturnStmt : public Stmt {
+public:
+    ReturnStmt(Token const& token, Expr const* value);
+    Token const& token() const { return mToken; }
+    Expr const* value() const { return mValue; }
+
+private:
+    Token mToken;
+    Expr const* mValue;
+};

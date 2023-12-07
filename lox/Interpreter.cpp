@@ -16,6 +16,10 @@
 
 namespace {
 
+    struct Return {
+        Object object;
+    };
+
     // Utility functions used in the concrete execute/evaluate functions
 
     bool isTruthy(Object const& object) {
@@ -187,21 +191,31 @@ namespace {
         std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
             assert(stmt && "Statement cannot be null.");
             result = execute(*stmt, blockEnvironment);
-            });
+        });
         return result;
     }
 
     Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment) {
-        auto const function = LoxCallable([&stmt](std::vector<Object> const& arguments) { 
+        auto const function = LoxCallable([&stmt](std::vector<Object> const& arguments) {
             auto environment = Environment(Lox::globals);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
                 environment.define(param.lexeme(), arg);
             }
-            executeBlockStmt(stmt.body(), environment);
-            return Object(); 
-        }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
+            try {
+                executeBlockStmt(stmt.body(), environment);
+            }
+            catch (Return const& ret) {
+                return ret.object;
+            }
+            return Object();
+            }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
         environment.define(stmt.name().lexeme(), function);
         return {};
+    }
+
+    Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment) {
+        auto const value = stmt.value() ? evaluate(*stmt.value(), environment) : Object{};
+        throw Return(value);
     }
 
     // Evaluate function of generic expression:
@@ -237,7 +251,8 @@ namespace {
             ExecuteStmtFuncT<WhileStmt>(executeWhileStmt),
             ExecuteStmtFuncT<VarStmt>(executeVarStmt),
             ExecuteStmtFuncT<BlockStmt>(executeBlockStmt),
-            ExecuteStmtFuncT<FunctionStmt>(executeFunctionStmt)
+            ExecuteStmtFuncT<FunctionStmt>(executeFunctionStmt),
+            ExecuteStmtFuncT<ReturnStmt>(executeReturnStmt)
         );
 
         return executeDispatcher.dispatch(statement, environment);

@@ -28,3 +28,7 @@ WhileStmt::WhileStmt(Expr const* condition, Stmt const* const& body) : mConditio
 
 FunctionStmt::FunctionStmt(Token const& name, std::vector<Token> const& parameters, BlockStmt const& body) : mName(name), mParameters(parameters), mBody(body) {
 }
+
+ReturnStmt::ReturnStmt(Token const& token, Expr const* value) : mToken(token), mValue(value) {
+}
+
