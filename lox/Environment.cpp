@@ -4,8 +4,7 @@
 #include <cassert>
 
 Environment::Environment() : mEnclosing(nullptr) {}
-
-Environment::Environment(Environment& environment) : mEnclosing(&environment) {}
+Environment::Environment(Environment* environment) : mEnclosing(environment) {}
 
 void Environment::define(std::string const& name, Object const& value) {
     mValues[name] = value;

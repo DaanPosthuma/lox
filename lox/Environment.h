@@ -8,7 +8,8 @@ class Token;
 class Environment {
 public:
     Environment();
-    Environment(Environment& environment);
+    Environment(Environment const&) = delete;
+    Environment(Environment* environment);
 
     void define(std::string const& name, Object const& value);
     Object get(Token const& name) const;

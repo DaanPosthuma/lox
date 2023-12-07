@@ -186,7 +186,7 @@ namespace {
     }
 
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
-        auto blockEnvironment = Environment(environment);
+        auto blockEnvironment = Environment(&environment);
         auto result = Object{};
         std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
             assert(stmt && "Statement cannot be null.");
@@ -197,7 +197,7 @@ namespace {
 
     Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment) {
         auto const function = LoxCallable([&stmt](std::vector<Object> const& arguments) {
-            auto environment = Environment(Lox::globals);
+            auto environment = Environment(&Lox::globals);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
                 environment.define(param.lexeme(), arg);
             }
@@ -259,12 +259,12 @@ namespace {
     }
 }
 
-Object interpret(std::vector<Stmt const*> const& statements, Environment& environment) {
+Object interpret(std::vector<Stmt const*> const& statements) {
     try {
         auto result = Object();
         for (auto const* statement : statements) {
             assert(statement && "Statement cannot be nullptr");
-            result = execute(*statement, environment);
+            result = execute(*statement, Lox::globals);
         }
         return result;
     }

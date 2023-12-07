@@ -12,5 +12,4 @@ public:
     static bool hadError;
     static bool debugEnabled;
     static Environment globals;
-    static Environment environment;
 };

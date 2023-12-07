@@ -39,7 +39,7 @@ void Lox::error(Token const& token, std::string const& message) {
 bool Lox::hadError = false;
 bool Lox::debugEnabled = false;
 Environment Lox::globals = {};
-Environment Lox::environment = globals;
+//Environment Lox::environment = globals;
 
 namespace {
 
@@ -90,7 +90,7 @@ namespace {
         }
 
         auto const tInterpretStart = std::chrono::high_resolution_clock::now();
-        auto const result = Lox::hadError ? Object{} : interpret(statements, Lox::environment);
+        auto const result = Lox::hadError ? Object{} : interpret(statements);
         auto const tInterpretEnd = std::chrono::high_resolution_clock::now();
 
         if (!result.isNil()) {
