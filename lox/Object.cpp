@@ -36,7 +36,11 @@ std::string Object::toString() const {
     else if (std::holds_alternative<double>(mData)) return doubleToString(std::get<double>(mData));
     else if (std::holds_alternative<bool>(mData)) return std::get<bool>(mData) ? "true" : "false";
     else if (std::holds_alternative<Nil>(mData)) return "Nil";
-    else if (std::holds_alternative<LoxCallable>(mData)) return "<function>";
+    else if (std::holds_alternative<LoxCallable>(mData)) {
+        auto const name = std::get<LoxCallable>(mData).name();
+        if (name.empty()) return "<fn>";
+        else return "<fn " + name + ">";
+    }
     else return "unknown type";
 }
 

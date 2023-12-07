@@ -199,7 +199,7 @@ namespace {
             }
             executeBlockStmt(stmt.body(), environment);
             return Object(); 
-        }, static_cast<int>(stmt.parameters().size()));
+        }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
         environment.define(stmt.name().lexeme(), function);
         return {};
     }

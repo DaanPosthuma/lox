@@ -46,11 +46,11 @@ namespace {
     void addNativeFunctionsToGlobalEnvironment() {
         Lox::globals.define("clock", LoxCallable([](std::vector<Object> const&) {
             return static_cast<double>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count());
-        }, 0));
+        }, 0, "clock (native)"));
 
         Lox::globals.define("monkey", LoxCallable([](std::vector<Object> const&) {
-            return "      __        \n w  c(..)o   (  \n  \\__(-)    __) \n      /\   (    \n     /(_)___)   \n     w /|       \n      | \\       \n     m  m       "s;
-        }, 0));
+            return "      __        \n w  c(..)o   (  \n  \\__(-)    __) \n      /\\   (    \n     /(_)___)   \n     w /|       \n      | \\       \n     m  m       "s;
+        }, 0, "monkey (native)"));
 
     }
 
