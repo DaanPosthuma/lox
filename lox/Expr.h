@@ -5,10 +5,6 @@
 
 class Expr {
 public:
-    //Expr() = default;
-    //Expr(Expr const&) = delete;
-    //Expr& operator=(Expr const&) = delete;
-
     virtual ~Expr() = default;
 };
 

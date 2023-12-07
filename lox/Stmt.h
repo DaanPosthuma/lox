@@ -7,10 +7,6 @@ class Expr;
 
 class Stmt {
 public:
-    Stmt() = default;
-    Stmt(Stmt const&) = delete;
-    Stmt& operator=(Stmt const&) = delete;
-
     virtual ~Stmt() = default;
 };
 
@@ -75,5 +71,21 @@ public:
 private:
     Expr const* mCondition;
     Stmt* mBody;
+
+};
+
+class FunctionStmt : public Stmt {
+public:
+    FunctionStmt(Token const& name, std::vector<Token> const& parameters, BlockStmt const& body);
+    
+    Token name() const { return mName; }
+    std::vector<Token> const& parameters() const { return mParameters; }
+    BlockStmt const& body() const { return mBody; }
+    
+
+private:
+    Token mName;
+    std::vector<Token> mParameters;
+    BlockStmt mBody;
 
 };

@@ -36,6 +36,7 @@ std::string Object::toString() const {
     else if (std::holds_alternative<double>(mData)) return doubleToString(std::get<double>(mData));
     else if (std::holds_alternative<bool>(mData)) return std::get<bool>(mData) ? "true" : "false";
     else if (std::holds_alternative<Nil>(mData)) return "Nil";
+    else if (std::holds_alternative<LoxCallable>(mData)) return "<function>";
     else return "unknown type";
 }
 
@@ -84,6 +85,7 @@ inline std::string Object::typeAsString() const noexcept {
     else if (isDouble()) return "Double";
     else if (isBoolean()) return "Boolean";
     else if (isNil()) return "Nil";
+    else if (isLoxCallable()) return "LoxCallable";
     else return "Unknown type";
 }
 

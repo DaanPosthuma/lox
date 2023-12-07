@@ -12,6 +12,7 @@
 #include <cassert>
 #include <iostream>
 #include <algorithm>
+#include <ranges>
 
 namespace {
 
@@ -190,6 +191,19 @@ namespace {
         return result;
     }
 
+    Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment) {
+        auto const function = LoxCallable([&stmt](std::vector<Object> const& arguments) { 
+            auto environment = Environment(Lox::globals);
+            for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
+                environment.define(param.lexeme(), arg);
+            }
+            executeBlockStmt(stmt.body(), environment);
+            return Object(); 
+        }, static_cast<int>(stmt.parameters().size()));
+        environment.define(stmt.name().lexeme(), function);
+        return {};
+    }
+
     // Evaluate function of generic expression:
 
     template <typename T>
@@ -222,7 +236,8 @@ namespace {
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),
             ExecuteStmtFuncT<WhileStmt>(executeWhileStmt),
             ExecuteStmtFuncT<VarStmt>(executeVarStmt),
-            ExecuteStmtFuncT<BlockStmt>(executeBlockStmt)
+            ExecuteStmtFuncT<BlockStmt>(executeBlockStmt),
+            ExecuteStmtFuncT<FunctionStmt>(executeFunctionStmt)
         );
 
         return executeDispatcher.dispatch(statement, environment);

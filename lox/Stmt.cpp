@@ -25,3 +25,6 @@ WhileStmt::WhileStmt(Expr const* condition, Stmt* const& body) : mCondition(cond
     assert(condition && "WhileStmt ctor: condition cannot be null");
     assert(condition && "WhileStmt ctor: body cannot be null");
 }
+
+FunctionStmt::FunctionStmt(Token const& name, std::vector<Token> const& parameters, BlockStmt const& body) : mName(name), mParameters(parameters), mBody(body) {
+}

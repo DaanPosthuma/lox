@@ -20,12 +20,13 @@ namespace {
         Stmt* declaration();
         Stmt* varDeclaration();
         Stmt* statement();
-        Stmt* ifStatement();
-        Stmt* printStatement();
-        Stmt* whileStatement();
+        IfStmt* ifStatement();
+        PrintStmt* printStatement();
+        WhileStmt* whileStatement();
         Stmt* forStatement();
-        Stmt* blockStatement();
-        Stmt* expressionStatement();
+        BlockStmt* blockStatement();
+        ExpressionStmt* expressionStatement();
+        FunctionStmt* function(std::string const& kind);
         Expr const* expression();
         Expr const* assignment();
         Expr const* oor ();
@@ -87,8 +88,9 @@ std::vector<Stmt*> Parser::parse() {
 
 Stmt* Parser::declaration() {
     //try {
-        if (match<TokenType::VAR>()) return varDeclaration();
-        return statement();
+    if (match<TokenType::FUN>()) return function("function");
+    if (match<TokenType::VAR>()) return varDeclaration();
+    return statement();
     //}
     //catch (ParseError const& error) {
     //    synchronise();
@@ -112,7 +114,7 @@ Stmt* Parser::statement() {
     return expressionStatement();
 }
 
-Stmt* Parser::ifStatement() {
+IfStmt* Parser::ifStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'if'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after 'if'.");
@@ -121,13 +123,13 @@ Stmt* Parser::ifStatement() {
     return new IfStmt(condition, thenBranch, elseBranch);
 }
 
-Stmt* Parser::printStatement() {
+PrintStmt* Parser::printStatement() {
     auto const value = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after value.");
     return new PrintStmt(value);
 }
 
-Stmt* Parser::whileStatement() {
+WhileStmt* Parser::whileStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'while'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after condition.");
@@ -170,7 +172,7 @@ Stmt* Parser::forStatement() {
     return body;
 }
 
-Stmt* Parser::blockStatement() {
+BlockStmt* Parser::blockStatement() {
     auto statements = std::vector<Stmt*>();
 
     while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
@@ -181,10 +183,28 @@ Stmt* Parser::blockStatement() {
     return new BlockStmt(statements);
 }
 
-Stmt* Parser::expressionStatement() {
+ExpressionStmt* Parser::expressionStatement() {
     auto const expr = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after expression.");
     return new ExpressionStmt(expr);
+}
+
+FunctionStmt* Parser::function(std::string const& kind) {
+    auto const name = consume<TokenType::IDENTIFIER>("Expect " + kind + " name.");
+    consume<TokenType::LEFT_PAREN>("Expect '(' after " + kind + " name.");
+    std::vector<Token> parameters;
+    if (!check<TokenType::RIGHT_PAREN>()) {
+        do {
+            if (parameters.size() >= 255) {
+                Lox::error(peek(), "Can't have more than 255 parameters.");
+            }
+            parameters.push_back(consume<TokenType::IDENTIFIER>("Expect parameter name."));
+        } while (match<TokenType::COMMA>());
+    }
+    consume<TokenType::RIGHT_PAREN>("Expect ')' after " + kind + " name.");
+    consume<TokenType::LEFT_BRACE>("Expect '{' before " + kind + " body.");
+    auto const body = blockStatement();
+    return new FunctionStmt(name, parameters, *body);
 }
 
 Expr const* Parser::expression() {
