@@ -14,19 +14,19 @@ namespace {
     class Parser {
     public:
         Parser(std::vector<Token> const& tokens) : mTokens(tokens) {}
-        std::vector<Stmt*> parse();
+        std::vector<Stmt const*> parse();
 
     private:
-        Stmt* declaration();
-        Stmt* varDeclaration();
-        Stmt* statement();
-        IfStmt* ifStatement();
-        PrintStmt* printStatement();
-        WhileStmt* whileStatement();
-        Stmt* forStatement();
-        BlockStmt* blockStatement();
-        ExpressionStmt* expressionStatement();
-        FunctionStmt* function(std::string const& kind);
+        Stmt const* declaration();
+        Stmt const* varDeclaration();
+        Stmt const* statement();
+        IfStmt const* ifStatement();
+        PrintStmt const* printStatement();
+        WhileStmt const* whileStatement();
+        Stmt const* forStatement();
+        BlockStmt const* blockStatement();
+        ExpressionStmt const* expressionStatement();
+        FunctionStmt const* function(std::string const& kind);
         Expr const* expression();
         Expr const* assignment();
         Expr const* oor ();
@@ -78,15 +78,15 @@ namespace {
     };
 }
 
-std::vector<Stmt*> Parser::parse() {
-    auto statements = std::vector<Stmt*>();
+std::vector<Stmt const*> Parser::parse() {
+    auto statements = std::vector<Stmt const*>();
     while (!isAtEnd()) {
         statements.push_back(declaration());
     }
     return statements;
 }
 
-Stmt* Parser::declaration() {
+Stmt const* Parser::declaration() {
     //try {
     if (match<TokenType::FUN>()) return function("function");
     if (match<TokenType::VAR>()) return varDeclaration();
@@ -98,14 +98,14 @@ Stmt* Parser::declaration() {
     //}
 }
 
-Stmt* Parser::varDeclaration() {
+Stmt const* Parser::varDeclaration() {
     auto const& name = consume<TokenType::IDENTIFIER>("Expect variable name");
     auto const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
     consume<TokenType::SEMICOLON>("Expect ';' after variable declaration.");
     return new VarStmt(name, initializer);
 }
 
-Stmt* Parser::statement() {
+Stmt const* Parser::statement() {
     if (match<TokenType::IF>()) return ifStatement();
     if (match<TokenType::WHILE>()) return whileStatement();
     if (match<TokenType::FOR>()) return forStatement();
@@ -114,7 +114,7 @@ Stmt* Parser::statement() {
     return expressionStatement();
 }
 
-IfStmt* Parser::ifStatement() {
+IfStmt const* Parser::ifStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'if'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after 'if'.");
@@ -123,13 +123,13 @@ IfStmt* Parser::ifStatement() {
     return new IfStmt(condition, thenBranch, elseBranch);
 }
 
-PrintStmt* Parser::printStatement() {
+PrintStmt const* Parser::printStatement() {
     auto const value = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after value.");
     return new PrintStmt(value);
 }
 
-WhileStmt* Parser::whileStatement() {
+WhileStmt const* Parser::whileStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'while'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after condition.");
@@ -137,10 +137,10 @@ WhileStmt* Parser::whileStatement() {
     return new WhileStmt(condition, body);
 }
 
-Stmt* Parser::forStatement() {
+Stmt const* Parser::forStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'for'.");
     
-    Stmt* initializer;
+    Stmt const* initializer;
     if (match<TokenType::SEMICOLON>()) {
         initializer = nullptr;
     }
@@ -172,8 +172,8 @@ Stmt* Parser::forStatement() {
     return body;
 }
 
-BlockStmt* Parser::blockStatement() {
-    auto statements = std::vector<Stmt*>();
+BlockStmt const* Parser::blockStatement() {
+    auto statements = std::vector<Stmt const*>();
 
     while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
         statements.push_back(declaration());
@@ -183,13 +183,13 @@ BlockStmt* Parser::blockStatement() {
     return new BlockStmt(statements);
 }
 
-ExpressionStmt* Parser::expressionStatement() {
+ExpressionStmt const* Parser::expressionStatement() {
     auto const expr = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after expression.");
     return new ExpressionStmt(expr);
 }
 
-FunctionStmt* Parser::function(std::string const& kind) {
+FunctionStmt const* Parser::function(std::string const& kind) {
     auto const name = consume<TokenType::IDENTIFIER>("Expect " + kind + " name.");
     consume<TokenType::LEFT_PAREN>("Expect '(' after " + kind + " name.");
     std::vector<Token> parameters;
@@ -402,7 +402,7 @@ Token const& Parser::previous() const {
     return mTokens.at(mCurrent - 1);
 }
 
-std::vector<Stmt*> parse(std::vector<Token> const& tokens) {
+std::vector<Stmt const*> parse(std::vector<Token> const& tokens) {
     try {
         auto parser = Parser(tokens);
         return parser.parse();

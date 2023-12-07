@@ -13,15 +13,15 @@ VarStmt::VarStmt(Token const& token, Expr const* initializer) : mToken(token), m
     assert(initializer && "VarStmt ctor: initializer cannot be nullptr");
 }
 
-BlockStmt::BlockStmt(std::vector<Stmt*> const& statements) : mStatements(statements) {
+BlockStmt::BlockStmt(std::vector<Stmt const*> const& statements) : mStatements(statements) {
 }
 
-IfStmt::IfStmt(Expr const* condition, Stmt* const& thenBranch, Stmt* const& elseBranch) : mCondition(condition), mThenBranch(thenBranch), mElseBranch(elseBranch) {
+IfStmt::IfStmt(Expr const* condition, Stmt const* thenBranch, Stmt const* elseBranch) : mCondition(condition), mThenBranch(thenBranch), mElseBranch(elseBranch) {
     assert(condition && "IfStmt ctor: condition cannot be null");
     assert(condition && "IfStmt ctor: then branch cannot be null");
 }
 
-WhileStmt::WhileStmt(Expr const* condition, Stmt* const& body) : mCondition(condition), mBody(body) {
+WhileStmt::WhileStmt(Expr const* condition, Stmt const* const& body) : mCondition(condition), mBody(body) {
     assert(condition && "WhileStmt ctor: condition cannot be null");
     assert(condition && "WhileStmt ctor: body cannot be null");
 }

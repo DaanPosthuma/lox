@@ -5,4 +5,4 @@
 class Stmt;
 class Token;
 
-std::vector<Stmt*> parse(std::vector<Token> const& tokens);
+std::vector<Stmt const*> parse(std::vector<Token> const& tokens);

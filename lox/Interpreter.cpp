@@ -244,7 +244,7 @@ namespace {
     }
 }
 
-Object interpret(std::vector<Stmt*> const& statements, Environment& environment) {
+Object interpret(std::vector<Stmt const*> const& statements, Environment& environment) {
     try {
         auto result = Object();
         for (auto const* statement : statements) {

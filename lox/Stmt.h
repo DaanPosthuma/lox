@@ -41,36 +41,36 @@ private:
 
 class BlockStmt : public Stmt {
 public:
-    BlockStmt(std::vector<Stmt*> const& statements);
-    std::vector<Stmt*> const& statements() const { return mStatements; }
+    BlockStmt(std::vector<Stmt const*> const& statements);
+    std::vector<Stmt const*> const& statements() const { return mStatements; }
 
 private:
-    std::vector<Stmt*> mStatements;
+    std::vector<Stmt const*> mStatements;
 };
 
 class IfStmt : public Stmt {
 public:
-    IfStmt(Expr const* condition, Stmt* const& thenBranch, Stmt* const& elseBranch);
+    IfStmt(Expr const* condition, Stmt const* thenBranch, Stmt const* elseBranch);
     Expr const& condition() const { return *mCondition; }
     Stmt const& thenBranch() const { return *mThenBranch; }
     Stmt const* elseBranch() const { return mElseBranch; }
 
 private:
     Expr const* mCondition;
-    Stmt* mThenBranch;
-    Stmt* mElseBranch;
+    Stmt const* mThenBranch;
+    Stmt const* mElseBranch;
 
 };
 
 class WhileStmt : public Stmt {
 public:
-    WhileStmt(Expr const* condition, Stmt* const& body);
+    WhileStmt(Expr const* condition, Stmt const* const& body);
     Expr const& condition() const { return *mCondition; }
     Stmt const& body() const { return *mBody; }
 
 private:
     Expr const* mCondition;
-    Stmt* mBody;
+    Stmt const* mBody;
 
 };
 
@@ -82,7 +82,6 @@ public:
     std::vector<Token> const& parameters() const { return mParameters; }
     BlockStmt const& body() const { return mBody; }
     
-
 private:
     Token mName;
     std::vector<Token> mParameters;
