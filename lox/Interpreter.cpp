@@ -81,9 +81,9 @@ namespace {
         case TokenType::LESS_EQUAL:
             checkNumberOperands(operatr, left, right);
             return static_cast<double>(left) <= static_cast<double>(right);
+        default:
+            throw RuntimeError{ expr.operatr(), "Sorry I cannot do this!" };
         }
-
-        throw RuntimeError{expr.operatr(), "Sorry I cannot do this!"};
     }
     Object evaluateGroupingExpr(GroupingExpr const& expr, Environment& environment) {
         return evaluate(expr.expression(), environment);
