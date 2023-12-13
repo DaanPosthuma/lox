@@ -17,7 +17,7 @@ Object Environment::get(Token const& name) const {
     if (mEnclosing) {
         return mEnclosing->get(name);
     }
-    throw RuntimeError(name, "Undefined variable '" + name.lexeme() + "'.");
+    throw RuntimeError{name, "Undefined variable '"s + name.lexeme() + "'."};
 }
 
 void Environment::assign(Token const& name, Object const& value) {
@@ -29,5 +29,5 @@ void Environment::assign(Token const& name, Object const& value) {
         mEnclosing->assign(name, value);
         return;
     }
-    throw RuntimeError(name, "Undefined variable '" + name.lexeme() + "'.");
+    throw RuntimeError{name, "Undefined variable '" + name.lexeme() + "'."};
 }

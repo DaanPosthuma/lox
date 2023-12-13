@@ -29,11 +29,11 @@ namespace {
     }
 
     void checkNumberOperand(Token const& token, Object const& object) {
-        if (!object.isDouble()) throw RuntimeError(token, "Operand must be a number.");
+        if (!object.isDouble()) throw RuntimeError{token, "Operand must be a number."};
     }
 
     void checkNumberOperands(Token const& token, Object const& left, Object const& right) {
-        if (!left.isDouble() || !right.isDouble()) throw RuntimeError(token, "Operands must be numbers.");
+        if (!left.isDouble() || !right.isDouble()) throw RuntimeError{token, "Operands must be numbers."};
     }
 
     // Forward declaration of generic execute/evaluate:
@@ -58,7 +58,7 @@ namespace {
             if (left.isDouble() && right.isDouble())
                 return static_cast<double>(left) + static_cast<double>(right);
 
-            throw RuntimeError(operatr, "Cannot concatenate " + left.toString() + " and " + right.toString() + ".");
+            throw RuntimeError{operatr, "Cannot concatenate " + left.toString() + " and " + right.toString() + "."};
         case TokenType::SLASH:
             checkNumberOperands(operatr, left, right);
             return static_cast<double>(left) / static_cast<double>(right);
@@ -83,7 +83,7 @@ namespace {
             return static_cast<double>(left) <= static_cast<double>(right);
         }
 
-        throw RuntimeError(expr.operatr(), "Sorry I cannot do this!");
+        throw RuntimeError{expr.operatr(), "Sorry I cannot do this!"};
     }
     Object evaluateGroupingExpr(GroupingExpr const& expr, Environment& environment) {
         return evaluate(expr.expression(), environment);
@@ -137,12 +137,12 @@ namespace {
         std::ranges::transform(expr.arguments(), std::back_inserter(arguments), proj);
 
         if (!callee.isLoxCallable()) {
-            throw RuntimeError(expr.paren(), "Operand must be a number.");
+            throw RuntimeError{expr.paren(), "Operand must be a number."};
         }
         auto const& function = static_cast<LoxCallable>(callee);
 
         if (function.arity() != arguments.size()) {
-            throw RuntimeError(expr.paren(), "Expected " + std::to_string(function.arity()) + " arguments but got " + std::to_string(arguments.size()) + ".");
+            throw RuntimeError{expr.paren(), "Expected " + std::to_string(function.arity()) + " arguments but got " + std::to_string(arguments.size()) + "."};
         }
 
         return function(arguments);
@@ -215,7 +215,7 @@ namespace {
 
     Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment) {
         auto const value = stmt.value() ? evaluate(*stmt.value(), environment) : Object{};
-        throw Return(value);
+        throw Return{value};
     }
 
     // Evaluate function of generic expression:
