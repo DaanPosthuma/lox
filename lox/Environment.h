@@ -13,9 +13,14 @@ public:
 
     void define(std::string const& name, Object const& value);
     Object get(Token const& name) const;
+    Object getAt(int distance, std::string const& name) const;
     void assign(Token const& name, Object const& value);
+    void assignAt(int distance, Token const& name, Object const& value);
 
 private:
+    Environment const& ancestor(int distance) const;
+    Environment& ancestor(int distance);
+
     std::unordered_map<std::string, Object> mValues;
     Environment* mEnclosing;
 };

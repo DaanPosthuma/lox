@@ -30,12 +30,12 @@ private:
 
 class VarStmt : public Stmt {
 public:
-    VarStmt(Token const& token, Expr const* initializer);
-    Token const& token() const { return mToken; }
-    Expr const& initializer() const { return *mInitializer; }
+    VarStmt(Token const& name, Expr const* initializer);
+    Token const& name() const { return mName; }
+    Expr const* initializer() const { return mInitializer; }
 
 private:
-    Token mToken;
+    Token mName;
     Expr const* mInitializer;
 };
 
@@ -91,11 +91,11 @@ private:
 
 class ReturnStmt : public Stmt {
 public:
-    ReturnStmt(Token const& token, Expr const* value);
-    Token const& token() const { return mToken; }
+    ReturnStmt(Token const& keyword, Expr const* value);
+    Token const& keyword() const { return mKeyword; }
     Expr const* value() const { return mValue; }
 
 private:
-    Token mToken;
+    Token mKeyword;
     Expr const* mValue;
 };

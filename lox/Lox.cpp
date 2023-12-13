@@ -7,6 +7,7 @@
 #include "Interpreter.h"
 #include "Environment.h"
 #include "LoxCallable.h"
+#include "Resolver.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -89,8 +90,12 @@ namespace {
             std::cout << "Num statements: " << statements.size() << std::endl;
         }
 
+        auto const tResolveStart = std::chrono::high_resolution_clock::now();
+        auto const locals = Lox::hadError ? ResolvedLocals() : resolve(statements);
+        auto const tResolveEnd = std::chrono::high_resolution_clock::now();
+
         auto const tInterpretStart = std::chrono::high_resolution_clock::now();
-        auto const result = Lox::hadError ? Object{} : interpret(statements);
+        auto const result = Lox::hadError ? Object{} : interpret(statements, locals);
         auto const tInterpretEnd = std::chrono::high_resolution_clock::now();
 
         if (!result.isNil()) {
@@ -100,6 +105,7 @@ namespace {
         if (Lox::debugEnabled) {
             std::cout << "Scanner: " << std::chrono::duration_cast<std::chrono::microseconds>(tScanTokensEnd - tScanTokensStart) << std::endl;
             std::cout << "Parser: " << std::chrono::duration_cast<std::chrono::microseconds>(tParseEnd - tParseStart) << std::endl;
+            std::cout << "Resolver: " << std::chrono::duration_cast<std::chrono::microseconds>(tResolveEnd - tResolveStart) << std::endl;
             std::cout << "Interpreter: " << std::chrono::duration_cast<std::chrono::microseconds>(tInterpretEnd - tInterpretStart) << std::endl;
         }
     }

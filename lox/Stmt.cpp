@@ -9,11 +9,13 @@ PrintStmt::PrintStmt(Expr const* expression) : mExpression(expression) {
     assert(expression && "PrintStmt ctor: expression cannot be nullptr");
 }
 
-VarStmt::VarStmt(Token const& token, Expr const* initializer) : mToken(token), mInitializer(initializer) {
-    assert(initializer && "VarStmt ctor: initializer cannot be nullptr");
+VarStmt::VarStmt(Token const& name, Expr const* initializer) : mName(name), mInitializer(initializer) {
 }
 
 BlockStmt::BlockStmt(std::vector<Stmt const*> const& statements) : mStatements(statements) {
+    for (auto const* stmt : statements) { 
+        assert(stmt); 
+    }
 }
 
 IfStmt::IfStmt(Expr const* condition, Stmt const* thenBranch, Stmt const* elseBranch) : mCondition(condition), mThenBranch(thenBranch), mElseBranch(elseBranch) {
@@ -29,6 +31,5 @@ WhileStmt::WhileStmt(Expr const* condition, Stmt const* const& body) : mConditio
 FunctionStmt::FunctionStmt(Token const& name, std::vector<Token> const& parameters, BlockStmt const& body) : mName(name), mParameters(parameters), mBody(body) {
 }
 
-ReturnStmt::ReturnStmt(Token const& token, Expr const* value) : mToken(token), mValue(value) {
+ReturnStmt::ReturnStmt(Token const& keyword, Expr const* value) : mKeyword(keyword), mValue(value) {
 }
-
