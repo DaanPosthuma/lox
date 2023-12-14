@@ -7,6 +7,8 @@
 #include "Resolver.h"
 #include <catch2/catch_test_macros.hpp>
 
+using namespace std::string_literals;
+
 namespace lox::parser {
 
     auto const identifier = Token(TokenType::IDENTIFIER, "test", Object(), 0);
@@ -14,7 +16,7 @@ namespace lox::parser {
     auto const variableExpr = VariableExpr(identifier);
     auto const useVariable = ExpressionStmt(&variableExpr);
 
-    auto const literalExpr = LiteralExpr(Object("test"));
+    auto const literalExpr = LiteralExpr(Object("test"s));
     auto const assignExpr = AssignExpr(identifier, &literalExpr);
     auto const assignStmt = ExpressionStmt(&assignExpr);
 

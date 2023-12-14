@@ -99,3 +99,14 @@ private:
     Token mKeyword;
     Expr const* mValue;
 };
+
+class ClassStmt : public Stmt {
+public:
+    ClassStmt(Token const& name, std::vector<FunctionStmt const*> const& methods);
+    Token const& name() const { return mName; }
+    std::vector<FunctionStmt const*> const& methods() const { return mMethods; }
+
+private:
+    Token mName;
+    std::vector<FunctionStmt const*> mMethods;
+};

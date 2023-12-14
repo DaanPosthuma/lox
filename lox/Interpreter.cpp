@@ -9,6 +9,7 @@
 #include "Environment.h"
 #include "LoxCallable.h"
 #include "Resolver.h"
+#include "LoxClass.h"
 #include <stdexcept>
 #include <cassert>
 #include <iostream>
@@ -45,6 +46,17 @@ namespace {
         else {
             return Lox::globals.get(name);
         }
+    }
+
+    template <class T>
+    auto loxCall(Object const& callee, std::vector<Object> const& arguments, Token const& paren) {
+        auto const& function = static_cast<T>(callee);
+
+        if (function.arity() != arguments.size()) {
+            throw RuntimeError{ paren, "Expected " + std::to_string(function.arity()) + " arguments but got " + std::to_string(arguments.size()) + "." };
+        }
+
+        return function(arguments);
     }
 
     // Forward declaration of generic execute/evaluate:
@@ -154,16 +166,15 @@ namespace {
         auto const proj = [&](Expr const* expr) { return evaluate(*expr, environment, locals); };
         std::ranges::transform(expr.arguments(), std::back_inserter(arguments), proj);
 
-        if (!callee.isLoxCallable()) {
-            throw RuntimeError{expr.paren(), "Operand must be a number."};
+        if (callee.isLoxCallable()) {
+            return loxCall<LoxCallable>(callee, arguments, expr.paren());
         }
-        auto const& function = static_cast<LoxCallable>(callee);
-
-        if (function.arity() != arguments.size()) {
-            throw RuntimeError{expr.paren(), "Expected " + std::to_string(function.arity()) + " arguments but got " + std::to_string(arguments.size()) + "."};
+        else if(callee.isLoxClass()) {
+            return loxCall<LoxClass>(callee, arguments, expr.paren());
         }
-
-        return function(arguments);
+        else {
+            throw RuntimeError{ expr.paren(), "Can only call functions and classes." };
+        }
     }
 
     // Execute functions of concrete statements:
@@ -233,8 +244,16 @@ namespace {
 
     Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
         auto const value = stmt.value() ? evaluate(*stmt.value(), environment, locals) : Object{};
-        throw Return{value};
+        throw Return{ value };
     }
+
+    Object executeClassStmt(ClassStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
+        environment.define(stmt.name().lexeme(), Object());
+        auto const klass = LoxClass(stmt.name().lexeme());
+        environment.assign(stmt.name(), klass);
+        return {};
+    }
+    
 
     // Evaluate function of generic expression:
 
@@ -270,7 +289,8 @@ namespace {
             ExecuteStmtFuncT<VarStmt>(executeVarStmt),
             ExecuteStmtFuncT<BlockStmt>(executeBlockStmt),
             ExecuteStmtFuncT<FunctionStmt>(executeFunctionStmt),
-            ExecuteStmtFuncT<ReturnStmt>(executeReturnStmt)
+            ExecuteStmtFuncT<ReturnStmt>(executeReturnStmt),
+            ExecuteStmtFuncT<ClassStmt>(executeClassStmt)
         );
 
         return executeDispatcher.dispatch(statement, environment, locals);

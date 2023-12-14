@@ -33,3 +33,9 @@ FunctionStmt::FunctionStmt(Token const& name, std::vector<Token> const& paramete
 
 ReturnStmt::ReturnStmt(Token const& keyword, Expr const* value) : mKeyword(keyword), mValue(value) {
 }
+
+ClassStmt::ClassStmt(Token const& name, std::vector<FunctionStmt const*> const& methods) : mName(name), mMethods(methods) {
+    for (auto const* method : methods) {
+        assert(method && "ClassStmt ctor: Method cannot be nullptr.");
+    }
+}

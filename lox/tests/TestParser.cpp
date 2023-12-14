@@ -6,6 +6,8 @@
 #include "Lox.h"
 #include <catch2/catch_test_macros.hpp>
 
+using namespace std::string_literals;
+
 namespace lox::parser {
 
     auto const tSEMICOLON = Token(TokenType::SEMICOLON, ";", Object(), 0);
@@ -17,7 +19,7 @@ namespace lox::parser {
     auto const tVAR = Token(TokenType::VAR, "print", Object(), 0);
     auto const tIDENTIFIER = Token(TokenType::IDENTIFIER, "test", Object(), 0);
     auto const tEQUAL = Token(TokenType::EQUAL, "=", Object(), 0);
-    auto const tSTRING = Token(TokenType::STRING, "Test", Object("Test"), 0);
+    auto const tSTRING = Token(TokenType::STRING, "Test", Object("Test"s), 0);
     
     TEST_CASE("Parser produces print statement", "[lox.parser.print]") {
         auto const printNumber = parse({ tPRINT, tNUMBER, tSEMICOLON, tEND_OF_FILE });

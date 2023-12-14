@@ -41,6 +41,15 @@ std::string Object::toString() const {
         if (name.empty()) return "<fn>";
         else return "<fn " + name + ">";
     }
+    else if (std::holds_alternative<LoxClass>(mData)) {
+        auto const name = std::get<LoxClass>(mData).name();
+        if (name.empty()) return "<class>";
+        else return "<class " + name + ">";
+    }
+    else if (std::holds_alternative<LoxInstance>(mData)) {
+        auto const className = std::get<LoxInstance>(mData).className();
+        return "<" + className + " instance>";
+    }
     else return "unknown type";
 }
 
@@ -64,6 +73,16 @@ Object::operator LoxCallable() const {
     return std::get<LoxCallable>(mData);
 }
 
+Object::operator LoxClass() const {
+    if (!isLoxClass()) throw std::runtime_error("Cannot convert " + typeAsString() + " to LoxClass");
+    return std::get<LoxClass>(mData);
+}
+
+Object::operator LoxInstance() const {
+    if (!isLoxInstance()) throw std::runtime_error("Cannot convert " + typeAsString() + " to LoxInstance");
+    return std::get<LoxInstance>(mData);
+}
+
 bool Object::isString() const {
     return std::holds_alternative<std::string>(mData);
 }
@@ -80,6 +99,14 @@ bool Object::isLoxCallable() const {
     return std::holds_alternative<LoxCallable>(mData);
 }
 
+bool Object::isLoxClass() const {
+    return std::holds_alternative<LoxClass>(mData);
+}
+
+bool Object::isLoxInstance() const {
+    return std::holds_alternative<LoxInstance>(mData);
+}
+
 bool Object::isNil() const {
     return std::holds_alternative<Nil>(mData);
 }
@@ -90,6 +117,8 @@ inline std::string Object::typeAsString() const noexcept {
     else if (isBoolean()) return "Boolean";
     else if (isNil()) return "Nil";
     else if (isLoxCallable()) return "LoxCallable";
+    else if (isLoxClass()) return "LoxClass";
+    else if (isLoxInstance()) return "LoxInstance";
     else return "Unknown type";
 }
 

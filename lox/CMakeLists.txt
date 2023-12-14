@@ -5,6 +5,8 @@
 				Interpreter.cpp 
 				Lox.cpp 
 				LoxCallable.cpp 
+				LoxClass.cpp
+				LoxInstance.cpp
 				Object.cpp 
 				Parser.cpp 
 				Resolver.cpp

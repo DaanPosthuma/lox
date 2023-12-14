@@ -18,7 +18,8 @@ namespace {
 
     private:
         Stmt const* declaration();
-        Stmt const* varDeclaration();
+        ClassStmt const* classDeclaration();
+        VarStmt const* varDeclaration();
         Stmt const* statement();
         IfStmt const* ifStatement();
         PrintStmt const* printStatement();
@@ -89,6 +90,7 @@ std::vector<Stmt const*> Parser::parse() {
 
 Stmt const* Parser::declaration() {
     //try {
+    if (match<TokenType::CLASS>()) return classDeclaration();
     if (match<TokenType::FUN>()) return function("function");
     if (match<TokenType::VAR>()) return varDeclaration();
     return statement();
@@ -99,7 +101,21 @@ Stmt const* Parser::declaration() {
     //}
 }
 
-Stmt const* Parser::varDeclaration() {
+ClassStmt const* Parser::classDeclaration() {
+    auto const name = consume<TokenType::IDENTIFIER>("Expect class name.");
+    consume<TokenType::LEFT_BRACE>("Expect '{' before class body.");
+
+    std::vector<FunctionStmt const*> methods;
+    while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
+        methods.push_back(function("method"));
+    }
+
+    consume<TokenType::RIGHT_BRACE>("Expect '}' after class body.");
+
+    return new ClassStmt(name, methods);
+}
+
+VarStmt const* Parser::varDeclaration() {
     auto const& name = consume<TokenType::IDENTIFIER>("Expect variable name");
     auto const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
     consume<TokenType::SEMICOLON>("Expect ';' after variable declaration.");

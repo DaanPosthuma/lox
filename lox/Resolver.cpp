@@ -102,6 +102,10 @@ namespace {
         }
         if (stmt.value()) resolve(*stmt.value(), context);
     }
+    void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
+        declare(stmt.name(), context.scopes);
+        define(stmt.name(), context.scopes);
+    }
 
     // Expressions:
     void resolveVariableExpr(VariableExpr const& expr, ResolverContext& context) {
@@ -152,7 +156,8 @@ namespace {
             ResolveStmtFuncT<VarStmt>(resolveVarStmt),
             ResolveStmtFuncT<BlockStmt>(resolveBlockStmt),
             ResolveStmtFuncT<FunctionStmt>(resolveFunctionStmt),
-            ResolveStmtFuncT<ReturnStmt>(resolveReturnStmt)
+            ResolveStmtFuncT<ReturnStmt>(resolveReturnStmt),
+            ResolveStmtFuncT<ClassStmt>(resolveClassStmt)
         );
 
         resolveDispatcher.dispatch(stmt, context);
