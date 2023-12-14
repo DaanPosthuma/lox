@@ -64,7 +64,7 @@ namespace {
     // Statements:
     void resolveVarStmt(VarStmt const& stmt, ResolverContext& context) {
         declare(stmt.name(), context.scopes);
-        if (!stmt.initializer()) {
+        if (stmt.initializer()) {
             resolve(*stmt.initializer(), context);
         }
         define(stmt.name(), context.scopes);

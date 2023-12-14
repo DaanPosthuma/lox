@@ -1,5 +1,21 @@
-﻿add_executable (lox "Expr.cpp" "Environment.cpp" "ExprToString.cpp" "Interpreter.cpp" "Lox.cpp" "Object.cpp" "Parser.cpp" "Scanner.cpp" "Stmt.cpp" "Token.cpp" "TokenType.cpp" "LoxCallable.cpp" "Resolver.cpp")
+﻿add_library(loxlib 
+				Environment.cpp 
+				Expr.cpp 
+				ExprToString.cpp 
+				Interpreter.cpp 
+				Lox.cpp 
+				LoxCallable.cpp 
+				Object.cpp 
+				Parser.cpp 
+				Resolver.cpp
+				Scanner.cpp 
+				Stmt.cpp 
+				Token.cpp 
+				TokenType.cpp 
+)
 
-if (CMAKE_VERSION VERSION_GREATER 3.25)
-  set_property(TARGET lox PROPERTY CXX_STANDARD 26)
-endif()
+add_executable (lox Main.cpp)
+
+target_link_libraries(lox loxlib)
+
+add_subdirectory ("tests")
