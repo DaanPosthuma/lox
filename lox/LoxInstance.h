@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
-class LoxClass;
+#include "LoxClass.h"
 
 class LoxInstance {
 public:
-    LoxInstance(std::string const& className);
-    std::string const& className() const;
+    LoxInstance(LoxClass const& klass);
+    LoxClass const& klass() const;
 
 private:
-    std::string mClassName;
+    LoxClass mClass;
 };

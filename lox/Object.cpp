@@ -15,39 +15,26 @@ namespace {
         if (s.back() == '.') s += '0';
         return s;
     }
-    
-    // trim from end (in place)
-    static inline void rtrim(std::string& s) {
-        s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
-            return !std::isspace(ch);
-            }).base(), s.end());
-    }
-
-    // trim from end (copying)
-    static inline std::string rtrim_copy(std::string s) {
-        rtrim(s);
-        return s;
-    }
 
 }
 
 std::string Object::toString() const {
-    if (std::holds_alternative<std::string>(mData)) return std::get<std::string>(mData);
-    else if (std::holds_alternative<double>(mData)) return doubleToString(std::get<double>(mData));
-    else if (std::holds_alternative<bool>(mData)) return std::get<bool>(mData) ? "true" : "false";
-    else if (std::holds_alternative<Nil>(mData)) return "Nil";
-    else if (std::holds_alternative<LoxCallable>(mData)) {
+    if (isString()) return std::get<std::string>(mData);
+    else if (isDouble()) return doubleToString(std::get<double>(mData));
+    else if (isBoolean()) return std::get<bool>(mData) ? "true" : "false";
+    else if (isNil()) return "Nil";
+    else if (isLoxCallable()) {
         auto const name = std::get<LoxCallable>(mData).name();
         if (name.empty()) return "<fn>";
         else return "<fn " + name + ">";
     }
-    else if (std::holds_alternative<LoxClass>(mData)) {
+    else if (isLoxClass()) {
         auto const name = std::get<LoxClass>(mData).name();
         if (name.empty()) return "<class>";
         else return "<class " + name + ">";
     }
-    else if (std::holds_alternative<LoxInstance>(mData)) {
-        auto const className = std::get<LoxInstance>(mData).className();
+    else if (isLoxInstance()) {
+        auto const className = std::get<LoxInstance>(mData).klass().name();
         return "<" + className + " instance>";
     }
     else return "unknown type";

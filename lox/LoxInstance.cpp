@@ -2,9 +2,9 @@
 #include "LoxClass.h"
 #include <cassert>
 
-LoxInstance::LoxInstance(std::string const& className) : mClassName(className) {
+LoxInstance::LoxInstance(LoxClass const& klass) : mClass(klass) {
 }
 
-std::string const& LoxInstance::className() const { 
-    return mClassName;
+LoxClass const& LoxInstance::klass() const { 
+    return mClass;
 }
