@@ -51,7 +51,7 @@ namespace {
     }
 
     TEST_CASE("Can have for loops.") {
-        REQUIRE(RunFullScript("var i; for (i=0; i != 10; i=i+1){}\ni;") == Object(10.0));
+        REQUIRE(RunFullScript("var i; for (i=0; i != 10; i=i+1){}\ni;") == 10.0);
     }
 
     TEST_CASE("Fibonacci") {
@@ -63,17 +63,17 @@ fun fib(n) {\
     return fib(n - 2) + fib(n - 1);\
 }"s;
 
-        REQUIRE(RunFullScript(fib + "fib(0);"s) == Object(0.0));
-        REQUIRE(RunFullScript(fib + "fib(1);"s) == Object(1.0));
-        REQUIRE(RunFullScript(fib + "fib(2);"s) == Object(1.0));
-        REQUIRE(RunFullScript(fib + "fib(3);"s) == Object(2.0));
-        REQUIRE(RunFullScript(fib + "fib(4);"s) == Object(3.0));
-        REQUIRE(RunFullScript(fib + "fib(5);"s) == Object(5.0));
-        REQUIRE(RunFullScript(fib + "fib(6);"s) == Object(8.0));
-        REQUIRE(RunFullScript(fib + "fib(7);"s) == Object(13.0));
-        REQUIRE(RunFullScript(fib + "fib(8);"s) == Object(21.0));
-        REQUIRE(RunFullScript(fib + "fib(9);"s) == Object(34.0));
-        REQUIRE(RunFullScript(fib + "fib(10);"s) == Object(55.0));
+        REQUIRE(RunFullScript(fib + "fib(0);"s) == 0.0);
+        REQUIRE(RunFullScript(fib + "fib(1);"s) == 1.0);
+        REQUIRE(RunFullScript(fib + "fib(2);"s) == 1.0);
+        REQUIRE(RunFullScript(fib + "fib(3);"s) == 2.0);
+        REQUIRE(RunFullScript(fib + "fib(4);"s) == 3.0);
+        REQUIRE(RunFullScript(fib + "fib(5);"s) == 5.0);
+        REQUIRE(RunFullScript(fib + "fib(6);"s) == 8.0);
+        REQUIRE(RunFullScript(fib + "fib(7);"s) == 13.0);
+        REQUIRE(RunFullScript(fib + "fib(8);"s) == 21.0);
+        REQUIRE(RunFullScript(fib + "fib(9);"s) == 34.0);
+        REQUIRE(RunFullScript(fib + "fib(10);"s) == 55.0);
     }
 
     TEST_CASE("Can return local function.") {
@@ -90,7 +90,7 @@ var counter = makeCounter();\
 counter();\
 counter();\
 counter();";
-        REQUIRE(RunFullScript(script) == Object(3.0));
+        REQUIRE(RunFullScript(script) == 3.0);
     }
 
     TEST_CASE("Closure captures variable from correct scope.") {
@@ -105,7 +105,7 @@ var ret;\
     ret = getA();\
 }\
 ret;";
-        REQUIRE(RunFullScript(script) == Object("global"s));
+        REQUIRE(RunFullScript(script) == "global"s);
     }
 
     TEST_CASE("Can create class instance.") {
