@@ -9,7 +9,7 @@
 
 using namespace std::string_literals;
 
-namespace lox::interpreter {
+namespace {
 
     auto const identifier = Token(TokenType::IDENTIFIER, "TestClass", Object(), 0);
     auto const dummy = identifier;
@@ -18,7 +18,7 @@ namespace lox::interpreter {
     auto const instantiateClassExpr = CallExpr(&variable, dummy, {});
     auto const instantiateClass = ExpressionStmt(&instantiateClassExpr);
 
-    TEST_CASE("Can create instance of a class", "[lox.interpreter.class-instance]") {
+    TEST_CASE("Can create instance of a class") {
         REQUIRE(interpret({ &declareClass, &instantiateClass }, {}).isLoxInstance());
         REQUIRE(!Lox::hadError);
     }

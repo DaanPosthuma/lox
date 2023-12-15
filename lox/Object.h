@@ -21,6 +21,7 @@ public:
     Object(LoxInstance const& loxInstance) : mData(loxInstance) {}
     Object() : mData(Nil{}) {}
     Object(char const*) = delete;
+    Object(int) = delete;
 
     std::string toString() const;
 
@@ -47,7 +48,4 @@ private:
 
 };
 
-inline std::ostream& operator<<(std::ostream& os, Object const& object) {
-    os << object.toString();
-    return os;
-}
+std::ostream& operator<<(std::ostream& os, Object const& object);

@@ -5,9 +5,9 @@
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
 
-namespace lox::scanner {
+namespace {
 
-    TEST_CASE("Scanner produces tokens", "[lox.scanner]") {
+    TEST_CASE("Scanner produces tokens") {
         REQUIRE(scanTokens("").size() == 1);
         REQUIRE(!Lox::hadError);
 

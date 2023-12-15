@@ -8,7 +8,7 @@
 
 using namespace std::string_literals;
 
-namespace lox::parser {
+namespace {
 
     auto const tSEMICOLON = Token(TokenType::SEMICOLON, ";", Object(), 0);
     auto const tEND_OF_FILE = Token(TokenType::END_OF_FILE, "", Object(), 0);
@@ -21,14 +21,14 @@ namespace lox::parser {
     auto const tEQUAL = Token(TokenType::EQUAL, "=", Object(), 0);
     auto const tSTRING = Token(TokenType::STRING, "Test", Object("Test"s), 0);
     
-    TEST_CASE("Parser produces print statement", "[lox.parser.print]") {
+    TEST_CASE("Parser produces print statement") {
         auto const printNumber = parse({ tPRINT, tNUMBER, tSEMICOLON, tEND_OF_FILE });
         REQUIRE(!Lox::hadError);
         REQUIRE(printNumber.size() == 1);
         REQUIRE(dynamic_cast<PrintStmt const*>(printNumber.front()));
     }
 
-    TEST_CASE("Parser produces var statement", "[lox.parser.var]") {
+    TEST_CASE("Parser produces var statement") {
         auto const printNumber = parse({ tVAR, tIDENTIFIER, tEQUAL, tSTRING, tSEMICOLON, tEND_OF_FILE });
         REQUIRE(!Lox::hadError);
         REQUIRE(printNumber.size() == 1);
