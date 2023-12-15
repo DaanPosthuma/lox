@@ -3,8 +3,9 @@
 #include "Resolver.h"
 #include "Interpreter.h"
 #include "Object.h"
-#include "Token.h"
 #include "Lox.h"
+#include "Token.h"
+#include "LogListener.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <string>
@@ -51,7 +52,9 @@ namespace {
     }
 
     TEST_CASE("Can have for loops.") {
-        REQUIRE(RunFullScript("var i; for (i=0; i != 10; i=i+1){}\ni;") == 10.0);
+        LogListener listener;
+        REQUIRE(RunFullScript("for (var i=0; i != 10; i=i+1){ log(i); }") == Object());
+        REQUIRE(listener.history() == std::vector<Object>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
     }
 
     TEST_CASE("Fibonacci") {
@@ -77,6 +80,7 @@ fun fib(n) {\
     }
 
     TEST_CASE("Can return local function.") {
+        LogListener listener;
         auto const script = "\
 fun makeCounter() {\
     var i = 0;\
@@ -87,25 +91,27 @@ fun makeCounter() {\
     return count;\
 }\
 var counter = makeCounter();\
-counter();\
-counter();\
-counter();";
-        REQUIRE(RunFullScript(script) == 3.0);
+log(counter());\
+log(counter());\
+log(counter());";
+        REQUIRE(RunFullScript(script) == Object());
+        REQUIRE(listener.history() == std::vector<Object>{1.0, 2.0, 3.0});
     }
 
     TEST_CASE("Closure captures variable from correct scope.") {
         auto const script = "\
 var a = \"global\";\
-var ret;\
 {\
     fun getA() {\
         return a;\
     }\
+    log(getA());\
     var a = \"local\";\
-    ret = getA();\
-}\
-ret;";
-        REQUIRE(RunFullScript(script) == "global"s);
+    log(getA());\
+}";
+        LogListener listener;
+        REQUIRE(RunFullScript(script) == Object());
+        REQUIRE(listener.history() == std::vector<Object>{"global"s, "global"s});
     }
 
     TEST_CASE("Can create class instance.") {

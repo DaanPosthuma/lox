@@ -16,6 +16,7 @@ public:
     Object getAt(int distance, std::string const& name) const;
     void assign(Token const& name, Object const& value);
     void assignAt(int distance, Token const& name, Object const& value);
+    void remove(std::string const& name);
 
 private:
     Environment const& ancestor(int distance) const;

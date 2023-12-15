@@ -40,6 +40,10 @@ void Environment::assignAt(int distance, Token const& name, Object const& value)
     ancestor(distance).mValues.at(name.lexeme()) = value;
 }
 
+void Environment::remove(std::string const& name) {
+    mValues.erase(name);
+}
+
 Environment const& Environment::ancestor(int distance) const {
     auto environment = this;
     for (int i = 0; i != distance; ++i) {

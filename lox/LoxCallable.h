@@ -8,13 +8,16 @@ class Object;
 
 class LoxCallable {
 public:
-    LoxCallable(std::function<Object(std::vector<Object> const&)> const& function, int arity, std::string const& name);
-    Object operator()(std::vector<Object> const& arguments) const;
+    using ArgsType = std::vector<Object> const&;
+    using ReturnType = Object;
+    using FunctionType = std::function<ReturnType(ArgsType)>;
+    LoxCallable(FunctionType const& function, int arity, std::string const& name);
+    Object operator()(ArgsType arguments) const;
     int arity() const { return mArity; };
     std::string const& name() const { return mName; };
 
 private:
-    std::function<Object(std::vector<Object> const&)> mFunction;
+    FunctionType mFunction;
     int mArity;
     std::string mName;
 };
