@@ -1,6 +1,7 @@
 #pragma once
 
 class Environment;
+class Token;
 #include <string>
 
 class Lox {

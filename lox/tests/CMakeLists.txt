@@ -8,5 +8,5 @@ FetchContent_MakeAvailable(Catch2)
 
 include_directories(..)
 
-add_executable(tests TestScanner.cpp TestParser.cpp TestResolver.cpp TestInterpreter.cpp TestFullScript.cpp "LogListener.h")
+add_executable(tests TestScanner.cpp TestParser.cpp TestResolver.cpp TestInterpreter.cpp TestFullScript.cpp LogListener.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain loxlib)
