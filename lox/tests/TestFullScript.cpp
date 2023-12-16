@@ -126,4 +126,16 @@ test.property;";
         REQUIRE(RunFullScript(script) == Object(3.0));
     }
 
+    TEST_CASE("Class can have methods.") {
+        auto const script = "\
+class Test{\
+    method() {\
+        return \"Method return value\";\
+    }\
+}\
+var test = Test();\
+test.method();";
+        REQUIRE(RunFullScript(script) == Object("Method return value"s));
+    }
+
 }

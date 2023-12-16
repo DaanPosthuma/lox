@@ -59,6 +59,24 @@ namespace {
         return function(arguments);
     }
 
+    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment, ResolvedLocals const& locals);
+
+    auto loxCallableFromFunctionStmt(FunctionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
+        return LoxCallable([&stmt, &environment, &locals](std::vector<Object> const& arguments) {
+            auto closure = new Environment(&environment);
+            for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
+                closure->define(param.lexeme(), arg);
+            }
+            try {
+                executeBlockStmt(stmt.body(), *closure, locals);
+            }
+            catch (Return const& ret) {
+                return ret.object;
+            }
+            return Object();
+            }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
+    }
+
     // Forward declaration of generic execute/evaluate:
     Object execute(Stmt const& statement, Environment& environment, ResolvedLocals const& locals);
     Object evaluate(Expr const& expr, Environment& environment, ResolvedLocals const& locals);
@@ -243,20 +261,7 @@ namespace {
     }
 
     Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        auto const function = LoxCallable([&stmt, &environment, &locals](std::vector<Object> const& arguments) {
-            auto closure = new Environment(&environment);
-            for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
-                closure->define(param.lexeme(), arg);
-            }
-            try {
-                executeBlockStmt(stmt.body(), *closure, locals);
-            }
-            catch (Return const& ret) {
-                return ret.object;
-            }
-            return Object();
-            }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
-        environment.define(stmt.name().lexeme(), function);
+        environment.define(stmt.name().lexeme(), loxCallableFromFunctionStmt(stmt, environment, locals));
         return {};
     }
 
@@ -267,8 +272,11 @@ namespace {
 
     Object executeClassStmt(ClassStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
         environment.define(stmt.name().lexeme(), Object());
-        auto const klass = LoxClass(stmt.name().lexeme());
-        environment.assign(stmt.name(), klass);
+        auto methods = std::unordered_map<std::string, LoxCallable>();
+        for (auto method : stmt.methods()) {
+            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, environment, locals)));
+        }
+        environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), methods));
         return {};
     }
     

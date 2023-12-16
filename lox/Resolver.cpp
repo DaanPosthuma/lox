@@ -10,7 +10,7 @@
 namespace {
 
     enum class FunctionType {
-        NONE, FUNCTION
+        NONE, FUNCTION, METHOD
     };
 
     using Scopes = std::vector<std::unordered_map<std::string, bool>>;
@@ -104,6 +104,9 @@ namespace {
     }
     void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
         declare(stmt.name(), context.scopes);
+        for (auto const* method : stmt.methods()) {
+            resolveFunction(*method, FunctionType::METHOD, context);
+        }
         define(stmt.name(), context.scopes);
     }
 

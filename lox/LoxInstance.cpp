@@ -9,10 +9,16 @@
 
 class LoxInstance::Fields {
 public:
-    Object const& get(Token const& name) const {
+    Object /*const&*/ get(Token const& name, LoxClass const& klass) const {
         if (auto const it = mFields.find(name.lexeme()); it != mFields.end()) {
             return it->second;
         }
+
+        auto const method = klass.findMethod(name.lexeme());
+        if (method != Object()) {
+            return method;
+        }
+
         throw RuntimeError{ name, "Undefined property '" + name.lexeme() + "'." };
     }
     void set(Token const& name, Object const& object) {
@@ -28,8 +34,8 @@ LoxClass const& LoxInstance::klass() const {
     return mClass;
 }
 
-Object const& LoxInstance::get(Token const& name) const {
-    return mFields->get(name);
+Object LoxInstance::get(Token const& name) const {
+    return mFields->get(name, mClass);
 }
 
 void LoxInstance::set(Token const& name, Object const& object) {

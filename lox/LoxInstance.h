@@ -8,7 +8,7 @@ class LoxInstance {
 public:
     LoxInstance(LoxClass const& klass);
     LoxClass const& klass() const;
-    Object const& get(Token const& name) const;
+    Object get(Token const& name) const;
     void set(Token const& name, Object const& value);
 
 private:
