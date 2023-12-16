@@ -143,6 +143,13 @@ namespace {
             resolve(*arg, context);
         }
     }
+    void resolveGetExpr(GetExpr const& expr, ResolverContext& context) {
+        resolve(expr.object(), context);
+    }
+    void resolveSetExpr(SetExpr const& expr, ResolverContext& context) {
+        resolve(expr.value(), context);
+        resolve(expr.object(), context);
+    }
 
     template <typename T>
     using ResolveStmtFuncT = std::function<void(T const&, ResolverContext&)>;
@@ -175,7 +182,9 @@ namespace {
             ResolveExprFuncT<VariableExpr>(resolveVariableExpr),
             ResolveExprFuncT<AssignExpr>(resolveAssignExpr),
             ResolveExprFuncT<LogicalExpr>(resolveLogicalExpr),
-            ResolveExprFuncT<CallExpr>(resolveCallExpr)
+            ResolveExprFuncT<CallExpr>(resolveCallExpr),
+            ResolveExprFuncT<GetExpr>(resolveGetExpr),
+            ResolveExprFuncT<SetExpr>(resolveSetExpr)
         );
 
         resolveDispatcher.dispatch(expr, context);

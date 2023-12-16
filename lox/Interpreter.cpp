@@ -176,6 +176,24 @@ namespace {
             throw RuntimeError{ expr.paren(), "Can only call functions and classes." };
         }
     }
+    Object evaluateGetExpr(GetExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
+        auto const object = evaluate(expr.object(), environment, locals);
+        if (object.isLoxInstance()) {
+            return static_cast<LoxInstance>(object).get(expr.name());
+        }
+
+        throw RuntimeError{ expr.name(), "Only instances have properties." };
+    }
+    Object evaluateSetExpr(SetExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
+        auto const object = evaluate(expr.object(), environment, locals);
+        if (!object.isLoxInstance()) {
+            throw RuntimeError{ expr.name(), "Only instances have properties." };
+        }
+
+        auto const value = evaluate(expr.value(), environment, locals);
+        static_cast<LoxInstance>(object).set(expr.name(), value);
+        return value;
+    }
 
     // Execute functions of concrete statements:
 
@@ -269,7 +287,9 @@ namespace {
             EvaluateExprFuncT<VariableExpr>(evaluateVariableExpr),
             EvaluateExprFuncT<AssignExpr>(evaluateAssignExpr),
             EvaluateExprFuncT<LogicalExpr>(evaluateLogicalExpr),
-            EvaluateExprFuncT<CallExpr>(evaluateCallExpr)
+            EvaluateExprFuncT<CallExpr>(evaluateCallExpr),
+            EvaluateExprFuncT<GetExpr>(evaluateGetExpr),
+            EvaluateExprFuncT<SetExpr>(evaluateSetExpr)
         );
 
         return evaluateDispatcher.dispatch(expr, environment, locals);

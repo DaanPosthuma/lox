@@ -118,4 +118,12 @@ var a = \"global\";\
         REQUIRE(RunFullScript("class Test{} Test();").isLoxInstance());
     }
 
+    TEST_CASE("Can set and get property on class instance.") {
+        auto const script = "class Test{}\
+var test = Test();\
+test.property = 3;\
+test.property;";
+        REQUIRE(RunFullScript(script) == Object(3.0));
+    }
+
 }

@@ -103,3 +103,27 @@ private:
     Token mParen;
     std::vector<Expr const*> mArguments;
 };
+
+class GetExpr : public Expr {
+public:
+    GetExpr(Expr const* object, Token const& name);
+    Expr const& object() const { return *mObject; }
+    Token const& name() const { return mName; }
+
+private:
+    Expr const* mObject;
+    Token mName;
+};
+
+class SetExpr : public Expr {
+public:
+    SetExpr(Expr const* object, Token const& name, Expr const* value);
+    Expr const& object() const { return *mObject; }
+    Token const& name() const { return mName; }
+    Expr const& value() const { return *mValue; }
+
+private:
+    Expr const* mObject;
+    Token mName;
+    Expr const* mValue;
+};

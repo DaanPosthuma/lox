@@ -250,6 +250,9 @@ Expr const* Parser::assignment() {
             auto const name = variableExpr->name();
             return new AssignExpr(name, value);
         }
+        else if (auto const getExpr = dynamic_cast<GetExpr const*>(expr)) {
+            return new SetExpr(&getExpr->object(), getExpr->name(), value);
+        }
 
         throw ParseError(equals, "Invalid assignment target.");
     }
@@ -343,6 +346,10 @@ Expr const* Parser::call() {
     while (true) {
         if (match<TokenType::LEFT_PAREN>()) {
             expr = finishCall(expr);
+        }
+        else if (match<TokenType::DOT>()) {
+            auto const name = consume<TokenType::IDENTIFIER>("Expect property name after '.'.");
+            expr = new GetExpr(expr, name);
         }
         else {
             break;

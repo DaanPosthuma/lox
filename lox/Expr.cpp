@@ -33,3 +33,12 @@ CallExpr::CallExpr(Expr const* callee, Token const& paren, std::vector<Expr cons
         assert(argument && "CallExpr ctor: argument cannot be nullptr");
     }
 }
+
+GetExpr::GetExpr(Expr const* object, Token const& name) : mObject(object), mName(name) {
+    assert(object && "GetExpr ctor: object cannot be nullptr");
+}
+
+SetExpr::SetExpr(Expr const* object, Token const& name, Expr const* value) : mObject(object), mName(name), mValue(value) {
+    assert(object && "SetExpr ctor: object cannot be nullptr");
+    assert(value && "SetExpr ctor: value cannot be nullptr");
+}
