@@ -7,4 +7,4 @@
 class Stmt;
 class Environment;
 
-Object interpret(std::vector<Stmt const*> const& statements, ResolvedLocals const& locals);
+Object interpret(std::vector<Stmt const*> const& statements);

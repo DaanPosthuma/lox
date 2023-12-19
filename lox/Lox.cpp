@@ -2,6 +2,7 @@
 #include "TokenType.h"
 #include "Lox.h"
 #include "Environment.h"
+#include "Resolver.h"
 #include <iostream>
 #include <string>
 
@@ -28,3 +29,4 @@ void Lox::error(Token const& token, std::string const& message) {
 bool Lox::hadError = false;
 bool Lox::debugEnabled = false;
 Environment Lox::globals = {};
+ResolvedLocals Lox::locals = {};

@@ -13,12 +13,16 @@ namespace {
         NONE, FUNCTION, METHOD
     };
 
+    enum class ClassType {
+        NONE, CLASS
+    };
+
     using Scopes = std::vector<std::unordered_map<std::string, bool>>;
 
     struct ResolverContext {
         Scopes scopes;
-        ResolvedLocals locals;
         FunctionType currentFunction = FunctionType::NONE;
+        ClassType currentClass = ClassType::NONE;
     };
 
     void resolve(Stmt const& stmt, ResolverContext& context);
@@ -42,7 +46,7 @@ namespace {
     void resolveLocal(Expr const& expr, Token const& name, ResolverContext& context) {
         for (auto i = static_cast<int>(context.scopes.size()) - 1; i >= 0; --i) {
             if (context.scopes[i].contains(name.lexeme())) {
-                context.locals[&expr] = static_cast<int>(context.scopes.size()) - 1 - i;
+                Lox::locals[&expr] = static_cast<int>(context.scopes.size()) - 1 - i;
                 return;
             }
         }
@@ -103,6 +107,8 @@ namespace {
         if (stmt.value()) resolve(*stmt.value(), context);
     }
     void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
+        auto const enclosingClass = std::exchange(context.currentClass, ClassType::CLASS);
+
         declare(stmt.name(), context.scopes);
         define(stmt.name(), context.scopes);
 
@@ -114,6 +120,8 @@ namespace {
         }
 
         endScope(context.scopes);
+
+        context.currentClass = enclosingClass;
     }
 
     // Expressions:
@@ -160,7 +168,12 @@ namespace {
         resolve(expr.object(), context);
     }
     void resolveThisExpr(ThisExpr const& expr, ResolverContext& context) {
-        resolveLocal(expr, expr.keyword(), context);
+        if (context.currentClass == ClassType::NONE) {
+            Lox::error(expr.keyword(), "Can't use this outside of a class.");
+        }
+        else {
+            resolveLocal(expr, expr.keyword(), context);
+        }
     }
 
     template <typename T>
@@ -204,10 +217,9 @@ namespace {
     }
 }
 
-ResolvedLocals resolve(std::vector<Stmt const*> const& statements) {
+void resolve(std::vector<Stmt const*> const& statements) {
     ResolverContext context;
     for (auto* stmt : statements) {
         resolve(*stmt, context);
     }
-    return context.locals;
 }

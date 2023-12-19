@@ -19,7 +19,7 @@ namespace {
     auto const instantiateClass = ExpressionStmt(&instantiateClassExpr);
 
     TEST_CASE("Can create instance of a class") {
-        REQUIRE(interpret({ &declareClass, &instantiateClass }, {}).isLoxInstance());
+        REQUIRE(interpret({ &declareClass, &instantiateClass }).isLoxInstance());
         REQUIRE(!Lox::hadError);
     }
 

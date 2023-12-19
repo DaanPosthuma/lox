@@ -38,9 +38,9 @@ namespace {
         if (!left.isDouble() || !right.isDouble()) throw RuntimeError{token, "Operands must be numbers."};
     }
 
-    Object lookupVariable(Token const& name, Expr const& expr, Environment const& environment, ResolvedLocals const& locals) {
+    Object lookupVariable(Token const& name, Expr const& expr, Environment const& environment) {
         
-        if (auto const it = locals.find(&expr); it != locals.end()) {
+        if (auto const it = Lox::locals.find(&expr); it != Lox::locals.end()) {
             return environment.getAt(it->second, name.lexeme());
         }
         else {
@@ -59,17 +59,17 @@ namespace {
         return function(arguments);
     }
 
-    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment, ResolvedLocals const& locals);
+    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment);
 
-    auto loxCallableFromFunctionStmt(FunctionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
+    auto loxCallableFromFunctionStmt(FunctionStmt const& stmt, Environment& environment, std::string const& className = "") {
 
-        auto executeFun = [&stmt, &locals](Environment* closure, std::vector<Object> const& arguments) {
+        auto executeFun = [&stmt](Environment* closure, std::vector<Object> const& arguments) {
             auto environment = new Environment(closure);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
                 environment->define(param.lexeme(), arg);
             }
             try {
-                executeBlockStmt(stmt.body(), *environment, locals);
+                executeBlockStmt(stmt.body(), *environment);
             }
             catch (Return const& ret) {
                 return ret.object;
@@ -77,17 +77,18 @@ namespace {
             return Object();
         };
 
-        return LoxCallable(executeFun, &environment, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
+        auto const functionName = className.empty() ? stmt.name().lexeme() : className + "::" + stmt.name().lexeme();
+        return LoxCallable(executeFun, &environment, static_cast<int>(stmt.parameters().size()), functionName);
     }
 
     // Forward declaration of generic execute/evaluate:
-    Object execute(Stmt const& statement, Environment& environment, ResolvedLocals const& locals);
-    Object evaluate(Expr const& expr, Environment& environment, ResolvedLocals const& locals);
+    Object execute(Stmt const& statement, Environment& environment);
+    Object evaluate(Expr const& expr, Environment& environment);
 
     // Evaluate functions of concrete expressions:
-    Object evaluateBinaryExpr(BinaryExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const left = evaluate(expr.left(), environment, locals);
-        auto const right = evaluate(expr.right(), environment, locals);
+    Object evaluateBinaryExpr(BinaryExpr const& expr, Environment& environment) {
+        auto const left = evaluate(expr.left(), environment);
+        auto const right = evaluate(expr.right(), environment);
         auto const& operatr = expr.operatr();
 
         switch (operatr.tokenType()) {
@@ -129,14 +130,14 @@ namespace {
             throw RuntimeError{ expr.operatr(), "Sorry I cannot do this!" };
         }
     }
-    Object evaluateGroupingExpr(GroupingExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        return evaluate(expr.expression(), environment, locals);
+    Object evaluateGroupingExpr(GroupingExpr const& expr, Environment& environment) {
+        return evaluate(expr.expression(), environment);
     }
-    Object evaluateLiteralExpr(LiteralExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
+    Object evaluateLiteralExpr(LiteralExpr const& expr, Environment& environment) {
         return expr.value();
     }
-    Object evaluateUnaryExpr(UnaryExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const right = evaluate(expr.right(), environment, locals);
+    Object evaluateUnaryExpr(UnaryExpr const& expr, Environment& environment) {
+        auto const right = evaluate(expr.right(), environment);
         auto const& operatr = expr.operatr();
 
         switch (operatr.tokenType()) {
@@ -151,14 +152,14 @@ namespace {
         }
     }
 
-    Object evaluateVariableExpr(VariableExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        return lookupVariable(expr.name(), expr, environment, locals);
+    Object evaluateVariableExpr(VariableExpr const& expr, Environment& environment) {
+        return lookupVariable(expr.name(), expr, environment);
     }
 
-    Object evaluateAssignExpr(AssignExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const value = evaluate(expr.value(), environment, locals);
+    Object evaluateAssignExpr(AssignExpr const& expr, Environment& environment) {
+        auto const value = evaluate(expr.value(), environment);
         
-        if (auto const it = locals.find(&expr); it != locals.end()) {
+        if (auto const it = Lox::locals.find(&expr); it != Lox::locals.end()) {
             environment.assignAt(it->second, expr.name(), value);
         }
         else {
@@ -168,8 +169,8 @@ namespace {
         return value;
     }
     
-    Object evaluateLogicalExpr(LogicalExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const lhs = evaluate(expr.left(), environment, locals);
+    Object evaluateLogicalExpr(LogicalExpr const& expr, Environment& environment) {
+        auto const lhs = evaluate(expr.left(), environment);
 
         if (expr.operatr().tokenType() == TokenType::OR) {
             if (isTruthy(lhs)) return lhs;
@@ -178,13 +179,13 @@ namespace {
             if (!isTruthy(lhs)) return lhs;
         }
 
-        return evaluate(expr.right(), environment, locals);
+        return evaluate(expr.right(), environment);
     }
 
-    Object evaluateCallExpr(CallExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const callee = evaluate(expr.callee(), environment, locals);
+    Object evaluateCallExpr(CallExpr const& expr, Environment& environment) {
+        auto const callee = evaluate(expr.callee(), environment);
         auto arguments = std::vector<Object>();
-        auto const proj = [&](Expr const* expr) { return evaluate(*expr, environment, locals); };
+        auto const proj = [&](Expr const* expr) { return evaluate(*expr, environment); };
         std::ranges::transform(expr.arguments(), std::back_inserter(arguments), proj);
 
         if (callee.isLoxCallable()) {
@@ -197,90 +198,90 @@ namespace {
             throw RuntimeError{ expr.paren(), "Can only call functions and classes." };
         }
     }
-    Object evaluateGetExpr(GetExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const object = evaluate(expr.object(), environment, locals);
+    Object evaluateGetExpr(GetExpr const& expr, Environment& environment) {
+        auto const object = evaluate(expr.object(), environment);
         if (object.isLoxInstance()) {
             return static_cast<LoxInstance>(object).get(expr.name());
         }
 
         throw RuntimeError{ expr.name(), "Only instances have properties." };
     }
-    Object evaluateSetExpr(SetExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        auto const object = evaluate(expr.object(), environment, locals);
+    Object evaluateSetExpr(SetExpr const& expr, Environment& environment) {
+        auto const object = evaluate(expr.object(), environment);
         if (!object.isLoxInstance()) {
             throw RuntimeError{ expr.name(), "Only instances have properties." };
         }
 
-        auto const value = evaluate(expr.value(), environment, locals);
+        auto const value = evaluate(expr.value(), environment);
         static_cast<LoxInstance>(object).set(expr.name(), value);
         return value;
     }
-    Object evaluateThisExpr(ThisExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        return lookupVariable(expr.keyword(), expr, environment, locals);
+    Object evaluateThisExpr(ThisExpr const& expr, Environment& environment) {
+        return lookupVariable(expr.keyword(), expr, environment);
     }
 
     // Execute functions of concrete statements:
 
-    Object executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        return evaluate(stmt.expression(), environment, locals);
+    Object executeExpressionStmt(ExpressionStmt const& stmt, Environment& environment) {
+        return evaluate(stmt.expression(), environment);
     }
 
-    Object executeIfStmt(IfStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        auto const condition = evaluate(stmt.condition(), environment, locals);
+    Object executeIfStmt(IfStmt const& stmt, Environment& environment) {
+        auto const condition = evaluate(stmt.condition(), environment);
         if (condition)
         {
-            execute(stmt.thenBranch(), environment, locals);
+            execute(stmt.thenBranch(), environment);
         }
         else if (auto const elseBranch = stmt.elseBranch()) {
-            execute(*elseBranch, environment, locals);
+            execute(*elseBranch, environment);
         }
         return {};
     }
 
-    Object executePrintStmt(PrintStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        auto const value = evaluate(stmt.expression(), environment, locals);
+    Object executePrintStmt(PrintStmt const& stmt, Environment& environment) {
+        auto const value = evaluate(stmt.expression(), environment);
         std::cout << value.toString() << std::endl;
         return {};
     }
     
-    Object executeWhileStmt(WhileStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        while (evaluate(stmt.condition(), environment, locals)) {
-            execute(stmt.body(), environment, locals);
+    Object executeWhileStmt(WhileStmt const& stmt, Environment& environment) {
+        while (evaluate(stmt.condition(), environment)) {
+            execute(stmt.body(), environment);
         }
         return {};
     }
 
-    Object executeVarStmt(VarStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        auto const value = stmt.initializer() ? evaluate(*stmt.initializer(), environment, locals) : Object();
+    Object executeVarStmt(VarStmt const& stmt, Environment& environment) {
+        auto const value = stmt.initializer() ? evaluate(*stmt.initializer(), environment) : Object();
         environment.define(stmt.name().lexeme(), value);
         return {};
     }
 
-    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
+    Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
         auto blockEnvironment = new Environment(&environment);
         auto result = Object{};
         std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
             assert(stmt && "Statement cannot be null.");
-            result = execute(*stmt, *blockEnvironment, locals);
+            result = execute(*stmt, *blockEnvironment);
         });
         return result;
     }
 
-    Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        environment.define(stmt.name().lexeme(), loxCallableFromFunctionStmt(stmt, environment, locals));
+    Object executeFunctionStmt(FunctionStmt const& stmt, Environment& environment) {
+        environment.define(stmt.name().lexeme(), loxCallableFromFunctionStmt(stmt, environment));
         return {};
     }
 
-    Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        auto const value = stmt.value() ? evaluate(*stmt.value(), environment, locals) : Object{};
+    Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment) {
+        auto const value = stmt.value() ? evaluate(*stmt.value(), environment) : Object{};
         throw Return{ value };
     }
 
-    Object executeClassStmt(ClassStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
+    Object executeClassStmt(ClassStmt const& stmt, Environment& environment) {
         environment.define(stmt.name().lexeme(), Object());
         auto methods = std::unordered_map<std::string, LoxCallable>();
         for (auto method : stmt.methods()) {
-            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, environment, locals)));
+            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, environment, stmt.name().lexeme())));
         }
         environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), methods));
         return {};
@@ -290,10 +291,10 @@ namespace {
     // Evaluate function of generic expression:
 
     template <typename T>
-    using EvaluateExprFuncT = std::function<Object(T const&, Environment&, ResolvedLocals const&)>;
+    using EvaluateExprFuncT = std::function<Object(T const&, Environment&)>;
 
-    Object evaluate(Expr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        static auto const evaluateDispatcher = Dispatcher<Object, Expr const&, Environment&, ResolvedLocals const&>("evaluate expression",
+    Object evaluate(Expr const& expr, Environment& environment) {
+        static auto const evaluateDispatcher = Dispatcher<Object, Expr const&, Environment&>("evaluate expression",
             EvaluateExprFuncT<BinaryExpr>(evaluateBinaryExpr),
             EvaluateExprFuncT<GroupingExpr>(evaluateGroupingExpr),
             EvaluateExprFuncT<LiteralExpr>(evaluateLiteralExpr),
@@ -307,16 +308,16 @@ namespace {
             EvaluateExprFuncT<ThisExpr>(evaluateThisExpr)
         );
 
-        return evaluateDispatcher.dispatch(expr, environment, locals);
+        return evaluateDispatcher.dispatch(expr, environment);
     }
 
     // Execute function of generic statement:
 
     template <typename T>
-    using ExecuteStmtFuncT = std::function<Object(T const&, Environment& environment, ResolvedLocals const&)>;
+    using ExecuteStmtFuncT = std::function<Object(T const&, Environment& environment)>;
 
-    Object execute(Stmt const& statement, Environment& environment, ResolvedLocals const& locals) {
-        static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&, ResolvedLocals const&>("execute statement",
+    Object execute(Stmt const& statement, Environment& environment) {
+        static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&>("execute statement",
             ExecuteStmtFuncT<ExpressionStmt>(executeExpressionStmt),
             ExecuteStmtFuncT<IfStmt>(executeIfStmt),
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),
@@ -328,16 +329,16 @@ namespace {
             ExecuteStmtFuncT<ClassStmt>(executeClassStmt)
         );
 
-        return executeDispatcher.dispatch(statement, environment, locals);
+        return executeDispatcher.dispatch(statement, environment);
     }
 }
 
-Object interpret(std::vector<Stmt const*> const& statements, ResolvedLocals const& locals) {
+Object interpret(std::vector<Stmt const*> const& statements) {
     try {
         auto result = Object();
         for (auto const* statement : statements) {
             assert(statement && "Statement cannot be nullptr");
-            result = execute(*statement, Lox::globals, locals);
+            result = execute(*statement, Lox::globals);
         }
         return result;
     }

@@ -5,6 +5,7 @@
 #include "Expr.h"
 #include "Lox.h"
 #include "Resolver.h"
+#include "ResetState.h"
 #include <catch2/catch_test_macros.hpp>
 
 using namespace std::string_literals;
@@ -21,34 +22,33 @@ namespace {
     auto const assignStmt = ExpressionStmt(&assignExpr);
 
     TEST_CASE("Declaration does not procude locals") {
+        ResetState guard;
         auto const block = BlockStmt({ &declareVariable });
-        auto const resolvedLocals = resolve({ &block });
+        resolve({ &block });
         REQUIRE(!Lox::hadError);
-        REQUIRE(resolvedLocals.empty());
-
     }
 
     TEST_CASE("Using a global variable does not produce any locals") {
-        auto const resolvedLocals = resolve({ &declareVariable, &useVariable });
+        ResetState guard;
+        resolve({ &declareVariable, &useVariable });
         REQUIRE(!Lox::hadError);
-        REQUIRE(resolvedLocals.empty());
-
+        REQUIRE(Lox::locals .empty());
     }
 
     TEST_CASE("Using a variable in block procudes a resolved local") {
+        ResetState guard;
         auto const block = BlockStmt({ &declareVariable, &useVariable });
-        auto const resolvedLocals = resolve({ &block });
+        resolve({ &block });
         REQUIRE(!Lox::hadError);
-        REQUIRE(resolvedLocals.contains(&variableExpr));
-
+        REQUIRE(Lox::locals.contains(&variableExpr));        
     }
 
     TEST_CASE("Assigning a varable produces local") {
+        ResetState guard;
         auto const block = BlockStmt({ &declareVariable, &assignStmt });
-        auto const resolvedLocals = resolve({ &block });
+        resolve({ &block });
         REQUIRE(!Lox::hadError);
-        REQUIRE(resolvedLocals.contains(&assignExpr));
-
+        REQUIRE(Lox::locals.contains(&assignExpr));
     }
 
 }

@@ -62,11 +62,11 @@ namespace {
         }
 
         auto const tResolveStart = std::chrono::high_resolution_clock::now();
-        auto const locals = Lox::hadError ? ResolvedLocals() : resolve(statements);
+        resolve(statements);
         auto const tResolveEnd = std::chrono::high_resolution_clock::now();
 
         auto const tInterpretStart = std::chrono::high_resolution_clock::now();
-        auto const result = Lox::hadError ? Object{} : interpret(statements, locals);
+        auto const result = Lox::hadError ? Object{} : interpret(statements);
         auto const tInterpretEnd = std::chrono::high_resolution_clock::now();
 
         if (!result.isNil()) {

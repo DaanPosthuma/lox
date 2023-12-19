@@ -1,8 +1,12 @@
 #pragma once
 
+#include "Resolver.h"
+#include <string>
+
 class Environment;
 class Token;
-#include <string>
+
+using ResolvedLocals = std::unordered_map<Expr const*, int>;
 
 class Lox {
 public:
@@ -13,4 +17,5 @@ public:
     static bool hadError;
     static bool debugEnabled;
     static Environment globals;
+    static ResolvedLocals locals;
 };

@@ -6,6 +6,7 @@
 #include "Lox.h"
 #include "Token.h"
 #include "LogListener.h"
+#include "ResetState.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <string>
@@ -16,16 +17,18 @@ namespace {
 
     Object RunFullScript(std::string const& source) {
 
+        ResetState guard;
+
         auto const tokens = scanTokens(source);
         if (Lox::hadError) return "Scanner error"s;
         
         auto const statements = parse(tokens);
         if (Lox::hadError) return "Parser error"s;
 
-        auto const locals = resolve(statements);
+        resolve(statements);
         if (Lox::hadError) return "Resolver error"s;
 
-        auto const result = interpret(statements, locals);
+        auto const result = interpret(statements);
         if (Lox::hadError) return "Interpreter error"s;
 
         return result;
