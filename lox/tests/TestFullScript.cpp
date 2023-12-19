@@ -152,4 +152,18 @@ Test().method();";
         REQUIRE(RunFullScript(script).isLoxInstance());
     }
 
+    TEST_CASE("Class can have initializer.") {
+        auto const script = "\
+class Test{\
+    init(n) {\
+        this.n = n;\
+    }\
+    get() {\
+        return this.n;\
+    }\
+}\
+Test(5).get();";
+        REQUIRE(RunFullScript(script) == Object(5.0));
+    }
+
 }

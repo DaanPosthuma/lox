@@ -6,7 +6,7 @@ class Token;
 
 class LoxInstance {
 public:
-    LoxInstance(LoxClass const& klass);
+    explicit LoxInstance(LoxClass const& klass);
     LoxClass const& klass() const;
     Object get(Token const& name) const;
     void set(Token const& name, Object const& value);
