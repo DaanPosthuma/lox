@@ -28,7 +28,7 @@ using DispatcherFuncT = std::function<std::string(T const&)>;
 
 std::string toString(Expr const& expr) {
 
-    static auto const dispatcher = Dispatcher<std::string, Expr const&>(
+    static auto const dispatcher = Dispatcher<std::string, Expr const&>("binary expression to string",
         DispatcherFuncT<BinaryExpr>(binaryExprToString),
         DispatcherFuncT<GroupingExpr>(groupingExprToString),
         DispatcherFuncT<LiteralExpr>(literalExprToString),

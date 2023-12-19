@@ -42,3 +42,6 @@ SetExpr::SetExpr(Expr const* object, Token const& name, Expr const* value) : mOb
     assert(object && "SetExpr ctor: object cannot be nullptr");
     assert(value && "SetExpr ctor: value cannot be nullptr");
 }
+
+ThisExpr::ThisExpr(Token const& keyword) : mKeyword(keyword) {
+}

@@ -10,7 +10,7 @@ class Dispatcher {
 public:
 
     template <class... ConcreteTypes>
-    Dispatcher(std::function<ReturnType(ConcreteTypes, Args...)>&&... concreteFunctions)
+    Dispatcher(std::string const& name, std::function<ReturnType(ConcreteTypes, Args...)>&&... concreteFunctions) : mName(name)
     {
         (add<ConcreteTypes>(std::forward<decltype(concreteFunctions)>(concreteFunctions)), ...);
     }
@@ -30,11 +30,12 @@ public:
             return it->second(object, args...);
         }
         else {
-            auto const errorMessage = std::string("No dispatcher found for type ") + typeid(object).name();
+            auto const errorMessage = std::string("No ") + mName + " dispatcher found for type " + typeid(object).name();
             throw std::runtime_error(errorMessage);
         }
     }
 
 private:
+    std::string mName;
     std::unordered_map<std::type_index, std::function<ReturnType(BaseType, Args...)>> mDispatcher;
 };

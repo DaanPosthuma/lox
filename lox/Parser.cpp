@@ -386,6 +386,10 @@ Expr const* Parser::primary() {
         return new LiteralExpr(previous().literal());
     }
 
+    if (match<TokenType::THIS>()) {
+        return new ThisExpr(previous());
+    }
+
     if (match<TokenType::IDENTIFIER>()) {
         return new VariableExpr(previous());
     }

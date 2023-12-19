@@ -1,5 +1,6 @@
 #include "Environment.h"
 #include "Token.h"
+#include "TokenType.h"
 #include "RuntimeError.h"
 #include <cassert>
 
@@ -21,7 +22,10 @@ Object Environment::get(Token const& name) const {
 }
 
 Object Environment::getAt(int distance, std::string const& name) const {
-    return ancestor(distance).mValues.at(name);
+    auto const& values = ancestor(distance).mValues;
+    if (values.contains(name))
+        return values.at(name);
+    throw RuntimeError{ Token(TokenType::IDENTIFIER, "this", Object(), 0), "Undefined variable '" + name + "'."};
 }
 
 void Environment::assign(Token const& name, Object const& value) {
@@ -48,6 +52,7 @@ Environment const& Environment::ancestor(int distance) const {
     auto environment = this;
     for (int i = 0; i != distance; ++i) {
         environment = environment->mEnclosing;
+        assert(environment && "Environment cannot be nullptr.");
     }
     return *environment;
 }

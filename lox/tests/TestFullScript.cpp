@@ -138,4 +138,15 @@ test.method();";
         REQUIRE(RunFullScript(script) == Object("Method return value"s));
     }
 
+    TEST_CASE("Method can access this.") {
+        auto const script = "\
+class Test{\
+    method() {\
+        return this;\
+    }\
+}\
+Test().method();";
+        REQUIRE(RunFullScript(script).isLoxInstance());
+    }
+
 }

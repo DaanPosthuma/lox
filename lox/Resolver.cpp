@@ -104,10 +104,16 @@ namespace {
     }
     void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
         declare(stmt.name(), context.scopes);
+        define(stmt.name(), context.scopes);
+
+        beginScope(context.scopes);
+        context.scopes.back()["this"] = true;
+
         for (auto const* method : stmt.methods()) {
             resolveFunction(*method, FunctionType::METHOD, context);
         }
-        define(stmt.name(), context.scopes);
+
+        endScope(context.scopes);
     }
 
     // Expressions:
@@ -153,12 +159,15 @@ namespace {
         resolve(expr.value(), context);
         resolve(expr.object(), context);
     }
+    void resolveThisExpr(ThisExpr const& expr, ResolverContext& context) {
+        resolveLocal(expr, expr.keyword(), context);
+    }
 
     template <typename T>
     using ResolveStmtFuncT = std::function<void(T const&, ResolverContext&)>;
 
     void resolve(Stmt const& stmt, ResolverContext& context) {
-        static auto const resolveDispatcher = Dispatcher<void, Stmt const&, ResolverContext&>(
+        static auto const resolveDispatcher = Dispatcher<void, Stmt const&, ResolverContext&>("resolve statement",
             ResolveStmtFuncT<ExpressionStmt>(resolveExpressionStmt),
             ResolveStmtFuncT<IfStmt>(resolveIfStmt),
             ResolveStmtFuncT<PrintStmt>(resolvePrintStmt),
@@ -177,7 +186,7 @@ namespace {
     using ResolveExprFuncT = std::function<void(T const&, ResolverContext&)>;
 
     void resolve(Expr const& expr, ResolverContext& context) {
-        static auto const resolveDispatcher = Dispatcher<void, Expr const&, ResolverContext&>(
+        static auto const resolveDispatcher = Dispatcher<void, Expr const&, ResolverContext&>("resolve expression",
             ResolveExprFuncT<BinaryExpr>(resolveBinaryExpr),
             ResolveExprFuncT<GroupingExpr>(resolveGroupingExpr),
             ResolveExprFuncT<LiteralExpr>(resolveLiteralExpr),
@@ -187,7 +196,8 @@ namespace {
             ResolveExprFuncT<LogicalExpr>(resolveLogicalExpr),
             ResolveExprFuncT<CallExpr>(resolveCallExpr),
             ResolveExprFuncT<GetExpr>(resolveGetExpr),
-            ResolveExprFuncT<SetExpr>(resolveSetExpr)
+            ResolveExprFuncT<SetExpr>(resolveSetExpr),
+            ResolveExprFuncT<ThisExpr>(resolveThisExpr)
         );
 
         resolveDispatcher.dispatch(expr, context);

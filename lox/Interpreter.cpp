@@ -62,19 +62,22 @@ namespace {
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment, ResolvedLocals const& locals);
 
     auto loxCallableFromFunctionStmt(FunctionStmt const& stmt, Environment& environment, ResolvedLocals const& locals) {
-        return LoxCallable([&stmt, &environment, &locals](std::vector<Object> const& arguments) {
-            auto closure = new Environment(&environment);
+
+        auto executeFun = [&stmt, &locals](Environment* closure, std::vector<Object> const& arguments) {
+            auto environment = new Environment(closure);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
-                closure->define(param.lexeme(), arg);
+                environment->define(param.lexeme(), arg);
             }
             try {
-                executeBlockStmt(stmt.body(), *closure, locals);
+                executeBlockStmt(stmt.body(), *environment, locals);
             }
             catch (Return const& ret) {
                 return ret.object;
             }
             return Object();
-            }, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
+        };
+
+        return LoxCallable(executeFun, &environment, static_cast<int>(stmt.parameters().size()), stmt.name().lexeme());
     }
 
     // Forward declaration of generic execute/evaluate:
@@ -212,6 +215,9 @@ namespace {
         static_cast<LoxInstance>(object).set(expr.name(), value);
         return value;
     }
+    Object evaluateThisExpr(ThisExpr const& expr, Environment& environment, ResolvedLocals const& locals) {
+        return lookupVariable(expr.keyword(), expr, environment, locals);
+    }
 
     // Execute functions of concrete statements:
 
@@ -287,7 +293,7 @@ namespace {
     using EvaluateExprFuncT = std::function<Object(T const&, Environment&, ResolvedLocals const&)>;
 
     Object evaluate(Expr const& expr, Environment& environment, ResolvedLocals const& locals) {
-        static auto const evaluateDispatcher = Dispatcher<Object, Expr const&, Environment&, ResolvedLocals const&>(
+        static auto const evaluateDispatcher = Dispatcher<Object, Expr const&, Environment&, ResolvedLocals const&>("evaluate expression",
             EvaluateExprFuncT<BinaryExpr>(evaluateBinaryExpr),
             EvaluateExprFuncT<GroupingExpr>(evaluateGroupingExpr),
             EvaluateExprFuncT<LiteralExpr>(evaluateLiteralExpr),
@@ -297,7 +303,8 @@ namespace {
             EvaluateExprFuncT<LogicalExpr>(evaluateLogicalExpr),
             EvaluateExprFuncT<CallExpr>(evaluateCallExpr),
             EvaluateExprFuncT<GetExpr>(evaluateGetExpr),
-            EvaluateExprFuncT<SetExpr>(evaluateSetExpr)
+            EvaluateExprFuncT<SetExpr>(evaluateSetExpr),
+            EvaluateExprFuncT<ThisExpr>(evaluateThisExpr)
         );
 
         return evaluateDispatcher.dispatch(expr, environment, locals);
@@ -309,7 +316,7 @@ namespace {
     using ExecuteStmtFuncT = std::function<Object(T const&, Environment& environment, ResolvedLocals const&)>;
 
     Object execute(Stmt const& statement, Environment& environment, ResolvedLocals const& locals) {
-        static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&, ResolvedLocals const&>(
+        static auto const executeDispatcher = Dispatcher<Object, Stmt const&, Environment&, ResolvedLocals const&>("execute statement",
             ExecuteStmtFuncT<ExpressionStmt>(executeExpressionStmt),
             ExecuteStmtFuncT<IfStmt>(executeIfStmt),
             ExecuteStmtFuncT<PrintStmt>(executePrintStmt),

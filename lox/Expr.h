@@ -127,3 +127,13 @@ private:
     Token mName;
     Expr const* mValue;
 };
+
+class ThisExpr : public Expr {
+public:
+    ThisExpr(Token const& keyword);
+
+    Token const& keyword() const { return mKeyword; }
+
+private:
+    Token mKeyword;
+};
