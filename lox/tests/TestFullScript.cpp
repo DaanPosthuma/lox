@@ -15,13 +15,11 @@ using namespace std::string_literals;
 
 namespace {
 
-    Object RunFullScript(std::string const& source) {
-
-        ResetState guard;
+    Object RunWitoutGuard(std::string const& source) {
 
         auto const tokens = scanTokens(source);
         if (Lox::hadError) return "Scanner error"s;
-        
+
         auto const statements = parse(tokens);
         if (Lox::hadError) return "Parser error"s;
 
@@ -32,6 +30,11 @@ namespace {
         if (Lox::hadError) return "Interpreter error"s;
 
         return result;
+    }
+
+    Object RunFullScript(std::string const& source) {
+        ResetState guard;
+        return RunWitoutGuard(source);
     }
 
     TEST_CASE("Can run a trivial script") {
@@ -164,6 +167,16 @@ class Test{\
 }\
 Test(5).get();";
         REQUIRE(RunFullScript(script) == Object(5.0));
+    }
+
+    TEST_CASE("Can run line by line (REPL)") {
+        ResetState guard;
+        LogListener listener;
+        REQUIRE(RunWitoutGuard("var test = 3;") == Object());
+        REQUIRE(RunWitoutGuard("log(test);") == Object());
+        REQUIRE(RunWitoutGuard("{\nvar test = 5; log(test);}") == Object());
+        REQUIRE(RunWitoutGuard("log(test);") == Object());
+        REQUIRE(listener.history() == std::vector<Object>{3.0, 5.0, 3.0});
     }
 
 }
