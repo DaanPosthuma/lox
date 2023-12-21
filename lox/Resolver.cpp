@@ -65,6 +65,8 @@ namespace {
         context.currentFunction = enclosingFunction;
     }
 
+    void resolveVariableExpr(VariableExpr const& expr, ResolverContext& context);
+
     // Statements:
     void resolveVarStmt(VarStmt const& stmt, ResolverContext& context) {
         declare(stmt.name(), context.scopes);
@@ -116,6 +118,13 @@ namespace {
 
         declare(stmt.name(), context.scopes);
         define(stmt.name(), context.scopes);
+        
+        if (stmt.superclass()) {
+            if (stmt.name().lexeme() == stmt.superclass()->name().lexeme()) {
+                Lox::error(stmt.superclass()->name(), "A class can't inherit from itself.");
+            }
+            resolveVariableExpr(*stmt.superclass(), context);
+        }
 
         beginScope(context.scopes);
         context.scopes.back()["this"] = true;

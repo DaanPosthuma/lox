@@ -3,7 +3,7 @@
 #include <vector>
 
 class Expr;
-
+class VariableExpr;
 
 class Stmt {
 public:
@@ -102,11 +102,13 @@ private:
 
 class ClassStmt : public Stmt {
 public:
-    ClassStmt(Token const& name, std::vector<FunctionStmt const*> const& methods);
+    ClassStmt(Token const& name, VariableExpr const* superclass, std::vector<FunctionStmt const*> const& methods);
     Token const& name() const { return mName; }
+    VariableExpr const* superclass() const { return mSuperclass; }
     std::vector<FunctionStmt const*> const& methods() const { return mMethods; }
 
 private:
     Token mName;
+    VariableExpr const* mSuperclass;
     std::vector<FunctionStmt const*> mMethods;
 };

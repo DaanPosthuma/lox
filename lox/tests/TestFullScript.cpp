@@ -209,4 +209,17 @@ class Test{\
         REQUIRE(RunWitoutGuard("Test().init();").isLoxInstance());
 
     }
+
+    TEST_CASE("Class can interherit from superclass.") {
+        auto const script = "\
+class Super{}\
+class Sub < Super{}";
+        REQUIRE(RunFullScript(script) == Object());
+    }
+
+    TEST_CASE("Class cannot interherit from itself.") {
+        auto const script = "\
+class Class < Class{}";
+        REQUIRE(RunFullScript(script) == Object("Resolver error"s));
+    }
 }

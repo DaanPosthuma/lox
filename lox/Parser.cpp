@@ -103,6 +103,12 @@ Stmt const* Parser::declaration() {
 
 ClassStmt const* Parser::classDeclaration() {
     auto const name = consume<TokenType::IDENTIFIER>("Expect class name.");
+
+    const auto superclass = match<TokenType::LESS>() ? [&] {
+        consume<TokenType::IDENTIFIER>("Expect superclass name.");
+        return new VariableExpr(previous());
+    }() : nullptr;
+
     consume<TokenType::LEFT_BRACE>("Expect '{' before class body.");
 
     std::vector<FunctionStmt const*> methods;
@@ -112,7 +118,7 @@ ClassStmt const* Parser::classDeclaration() {
 
     consume<TokenType::RIGHT_BRACE>("Expect '}' after class body.");
 
-    return new ClassStmt(name, methods);
+    return new ClassStmt(name, superclass, methods);
 }
 
 VarStmt const* Parser::varDeclaration() {

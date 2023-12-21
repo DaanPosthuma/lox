@@ -1,4 +1,5 @@
 #include "Stmt.h"
+#include "Expr.h"
 #include <cassert>
 
 ExpressionStmt::ExpressionStmt(Expr const* expression) : mExpression(expression) {
@@ -34,7 +35,7 @@ FunctionStmt::FunctionStmt(Token const& name, std::vector<Token> const& paramete
 ReturnStmt::ReturnStmt(Token const& keyword, Expr const* value) : mKeyword(keyword), mValue(value) {
 }
 
-ClassStmt::ClassStmt(Token const& name, std::vector<FunctionStmt const*> const& methods) : mName(name), mMethods(methods) {
+ClassStmt::ClassStmt(Token const& name, VariableExpr const* superclass, std::vector<FunctionStmt const*> const& methods) : mName(name), mSuperclass(superclass), mMethods(methods) {
     for (auto const* method : methods) {
         assert(method && "ClassStmt ctor: Method cannot be nullptr.");
     }

@@ -13,7 +13,7 @@ namespace {
 
     auto const identifier = Token(TokenType::IDENTIFIER, "TestClass", Object(), 0);
     auto const dummy = identifier;
-    auto const declareClass = ClassStmt(identifier, {});
+    auto const declareClass = ClassStmt(identifier, nullptr, {});
     auto const variable = VariableExpr(identifier);
     auto const instantiateClassExpr = CallExpr(&variable, dummy, {});
     auto const instantiateClass = ExpressionStmt(&instantiateClassExpr);
