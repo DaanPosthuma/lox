@@ -62,8 +62,8 @@ namespace {
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment);
 
     auto loxCallableFromFunctionStmt(FunctionStmt const& stmt, Environment& environment, std::string const& className = "") {
-
-        auto executeFun = [&stmt](Environment* closure, std::vector<Object> const& arguments) {
+        auto const isInitializer = !className.empty() && stmt.name().lexeme() == "init";
+        auto executeFun = [&stmt,isInitializer](Environment* closure, std::vector<Object> const& arguments) {
             auto environment = new Environment(closure);
             for (auto const& [param, arg] : std::views::zip(stmt.parameters(), arguments)) {
                 environment->define(param.lexeme(), arg);
@@ -74,7 +74,7 @@ namespace {
             catch (Return const& ret) {
                 return ret.object;
             }
-            return Object();
+            return isInitializer ? closure->getAt(0, "this") : Object();
         };
 
         auto const functionName = className.empty() ? stmt.name().lexeme() : className + "::" + stmt.name().lexeme();

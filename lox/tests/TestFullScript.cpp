@@ -179,4 +179,13 @@ Test(5).get();";
         REQUIRE(listener.history() == std::vector<Object>{3.0, 5.0, 3.0});
     }
 
+    TEST_CASE("Init implicitly returns this.") {
+        auto const script = "\
+class Test{\
+    init() {}\
+}\
+Test().init();";
+        REQUIRE(RunFullScript(script).isLoxInstance());
+
+    }
 }
