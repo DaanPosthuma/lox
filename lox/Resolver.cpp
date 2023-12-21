@@ -10,7 +10,7 @@
 namespace {
 
     enum class FunctionType {
-        NONE, FUNCTION, METHOD
+        NONE, FUNCTION, INITIALIZER, METHOD
     };
 
     enum class ClassType {
@@ -104,7 +104,12 @@ namespace {
         if (context.currentFunction == FunctionType::NONE) {
             Lox::error(stmt.keyword(), "Can't return from top-level code.");
         }
-        if (stmt.value()) resolve(*stmt.value(), context);
+        if (stmt.value()) {
+            if (context.currentFunction == FunctionType::INITIALIZER) {
+                Lox::error(stmt.keyword(), "Can't return a value from an initializer.");
+            }
+            resolve(*stmt.value(), context);
+        }
     }
     void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
         auto const enclosingClass = std::exchange(context.currentClass, ClassType::CLASS);
@@ -116,7 +121,7 @@ namespace {
         context.scopes.back()["this"] = true;
 
         for (auto const* method : stmt.methods()) {
-            resolveFunction(*method, FunctionType::METHOD, context);
+            resolveFunction(*method, method->name().lexeme() == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD, context);
         }
 
         endScope(context.scopes);

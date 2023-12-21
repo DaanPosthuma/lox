@@ -72,7 +72,7 @@ namespace {
                 executeBlockStmt(stmt.body(), *environment);
             }
             catch (Return const& ret) {
-                return ret.object;
+                return isInitializer ? closure->getAt(0, "this") : ret.object;
             }
             return isInitializer ? closure->getAt(0, "this") : Object();
         };

@@ -17,6 +17,8 @@ namespace {
 
     Object RunWitoutGuard(std::string const& source) {
 
+        assert(!Lox::hadError);
+
         auto const tokens = scanTokens(source);
         if (Lox::hadError) return "Scanner error"s;
 
@@ -186,6 +188,25 @@ class Test{\
 }\
 Test().init();";
         REQUIRE(RunFullScript(script).isLoxInstance());
+
+    }
+
+    TEST_CASE("Cannot return value in intializer.") {
+        auto const script = "\
+class Test{\
+    init() {return 3;}\
+}";
+        REQUIRE(RunFullScript(script) == Object("Resolver error"s));
+    }
+
+    TEST_CASE("Can return with no value in intializer.") {
+        auto const script = "\
+class Test{\
+    init() {return;}\
+}";
+        ResetState guard;
+        REQUIRE(RunWitoutGuard(script) == Object());
+        REQUIRE(RunWitoutGuard("Test().init();").isLoxInstance());
 
     }
 }
