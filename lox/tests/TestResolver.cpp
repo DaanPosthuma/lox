@@ -5,7 +5,7 @@
 #include "Expr.h"
 #include "Lox.h"
 #include "Resolver.h"
-#include "ResetState.h"
+#include "TestGuard.h"
 #include <catch2/catch_test_macros.hpp>
 
 using namespace std::string_literals;
@@ -22,21 +22,21 @@ namespace {
     auto const assignStmt = ExpressionStmt(&assignExpr);
 
     TEST_CASE("Declaration does not procude locals") {
-        ResetState guard;
+        TestGuard guard;
         auto const block = BlockStmt({ &declareVariable });
         resolve({ &block });
         REQUIRE(!Lox::hadError);
     }
 
     TEST_CASE("Using a global variable does not produce any locals") {
-        ResetState guard;
+        TestGuard guard;
         resolve({ &declareVariable, &useVariable });
         REQUIRE(!Lox::hadError);
         REQUIRE(Lox::locals .empty());
     }
 
     TEST_CASE("Using a variable in block procudes a resolved local") {
-        ResetState guard;
+        TestGuard guard;
         auto const block = BlockStmt({ &declareVariable, &useVariable });
         resolve({ &block });
         REQUIRE(!Lox::hadError);
@@ -44,7 +44,7 @@ namespace {
     }
 
     TEST_CASE("Assigning a varable produces local") {
-        ResetState guard;
+        TestGuard guard;
         auto const block = BlockStmt({ &declareVariable, &assignStmt });
         resolve({ &block });
         REQUIRE(!Lox::hadError);

@@ -5,7 +5,23 @@
 #include "LoxCallable.h"
 #include <cassert>
 
-LoxClass::LoxClass(std::string const& name, std::unordered_map<std::string, LoxCallable> const& methods) : mName(name), mMethods(methods) {
+class LoxClass::Methods {
+public:
+    Methods(std::unordered_map<std::string, LoxCallable> const& methods, std::optional<LoxClass> const& superclass) 
+        : mMethods(methods), mSuperclassMethods(superclass ? superclass->mMethods : nullptr) {}
+
+    Object findMethod(std::string const& name) const {
+        if (mMethods.contains(name)) return mMethods.at(name);
+        if (mSuperclassMethods) return mSuperclassMethods->findMethod(name);
+        return Object();
+    }
+private:
+    std::unordered_map<std::string, LoxCallable> mMethods;
+    std::shared_ptr<const Methods> mSuperclassMethods;
+};
+
+LoxClass::LoxClass(std::string const& name, std::optional<LoxClass> const& superclass, std::unordered_map<std::string, LoxCallable> const& methods)
+    : mName(name), mMethods(new Methods(methods, superclass)) {
 }
 
 int LoxClass::arity() const { 
@@ -26,5 +42,5 @@ LoxInstance LoxClass::operator()(std::vector<Object> const& arguments) const {
 }
 
 Object LoxClass::findMethod(std::string const& name) const {
-    return mMethods.contains(name) ? mMethods.at(name) : Object();
+    return mMethods->findMethod(name);
 }

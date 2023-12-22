@@ -15,6 +15,7 @@
 #include <iostream>
 #include <algorithm>
 #include <ranges>
+#include <optional>
 
 namespace {
 
@@ -278,12 +279,18 @@ namespace {
     }
 
     Object executeClassStmt(ClassStmt const& stmt, Environment& environment) {
+        auto const superclass = stmt.superclass() ? [&]() -> std::optional<LoxClass> {
+            auto const superclass = evaluate(*stmt.superclass(), environment);
+            if (!superclass.isLoxClass()) throw RuntimeError(stmt.superclass()->name(), "Superclass must be a class");
+            return static_cast<LoxClass>(superclass);
+        }() : std::nullopt;
+
         environment.define(stmt.name().lexeme(), Object());
         auto methods = std::unordered_map<std::string, LoxCallable>();
         for (auto method : stmt.methods()) {
             methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, environment, stmt.name().lexeme())));
         }
-        environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), methods));
+        environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), superclass, methods));
         return {};
     }
     

@@ -6,7 +6,7 @@
 #include "Lox.h"
 #include "Token.h"
 #include "LogListener.h"
-#include "ResetState.h"
+#include "TestGuard.h"
 
 #include <catch2/catch_test_macros.hpp>
 #include <string>
@@ -35,7 +35,7 @@ namespace {
     }
 
     Object RunFullScript(std::string const& source) {
-        ResetState guard;
+        TestGuard guard;
         return RunWitoutGuard(source);
     }
 
@@ -172,7 +172,7 @@ Test(5).get();";
     }
 
     TEST_CASE("Can run line by line (REPL)") {
-        ResetState guard;
+        TestGuard guard;
         LogListener listener;
         REQUIRE(RunWitoutGuard("var test = 3;") == Object());
         REQUIRE(RunWitoutGuard("log(test);") == Object());
@@ -196,7 +196,9 @@ Test().init();";
 class Test{\
     init() {return 3;}\
 }";
-        REQUIRE(RunFullScript(script) == Object("Resolver error"s));
+        TestGuard guard;
+        REQUIRE(RunWitoutGuard(script) == Object("Resolver error"s));
+        REQUIRE(guard.capturedLinesCerr() == std::vector{"[line 1] Error at 'return': Can't return a value from an initializer."s});
     }
 
     TEST_CASE("Can return with no value in intializer.") {
@@ -204,7 +206,7 @@ class Test{\
 class Test{\
     init() {return;}\
 }";
-        ResetState guard;
+        TestGuard guard;
         REQUIRE(RunWitoutGuard(script) == Object());
         REQUIRE(RunWitoutGuard("Test().init();").isLoxInstance());
 
@@ -220,6 +222,25 @@ class Sub < Super{}";
     TEST_CASE("Class cannot interherit from itself.") {
         auto const script = "\
 class Class < Class{}";
-        REQUIRE(RunFullScript(script) == Object("Resolver error"s));
+        TestGuard guard;
+        REQUIRE(RunWitoutGuard(script) == Object("Resolver error"s));
+        REQUIRE(guard.capturedLinesCerr() == std::vector{ "[line 1] Error at 'Class': A class can't inherit from itself."s });
+    }
+
+    TEST_CASE("Class cannot interherit from a double.") {
+        auto const script = "\
+var test = 3.0;\
+class Class < test {}";
+        TestGuard guard;
+        REQUIRE(RunWitoutGuard(script) == Object("Interpreter error"s));
+        REQUIRE(guard.capturedLinesCerr() == std::vector{"[line 1] Error at 'test': Superclass must be a class"s});
+    }
+
+    TEST_CASE("Can call methods from superclass.") {
+        auto const script = "\
+class Super {superfun(){return 1.0;}}\
+class Sub < Super {}\
+Sub().superfun();";
+        REQUIRE(RunFullScript(script) == Object(1.0));
     }
 }
