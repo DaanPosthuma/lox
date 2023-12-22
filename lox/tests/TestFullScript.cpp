@@ -34,34 +34,34 @@ namespace {
         return result;
     }
 
-    Object RunFullScript(std::string const& source) {
+    Object RunWithGuard(std::string const& source) {
         TestGuard guard;
         return RunWitoutGuard(source);
     }
 
     TEST_CASE("Can run a trivial script") {
-        REQUIRE(RunFullScript("") == Object());
+        REQUIRE(RunWithGuard("") == Object());
     }
 
     TEST_CASE("Result of last statement is returned.") {
-        REQUIRE(RunFullScript("5.0;4.0;3.0;") == 3.0);
+        REQUIRE(RunWithGuard("5.0;4.0;3.0;") == 3.0);
     }
 
     TEST_CASE("Can have global variables.") {
-        REQUIRE(RunFullScript("var varTest;\nvarTest;") == Object());
+        REQUIRE(RunWithGuard("var varTest;\nvarTest;") == Object());
     }
 
     TEST_CASE("Can assign to global variables.") {
-        REQUIRE(RunFullScript("var varTest;\nvarTest = true;\nvarTest;") == true);
+        REQUIRE(RunWithGuard("var varTest;\nvarTest = true;\nvarTest;") == true);
     }
 
     TEST_CASE("Can have if statements.") {
-        REQUIRE(RunFullScript("if (true) {} else {}") == Object());
+        REQUIRE(RunWithGuard("if (true) {} else {}") == Object());
     }
 
     TEST_CASE("Can have for loops.") {
         LogListener listener;
-        REQUIRE(RunFullScript("for (var i=0; i != 10; i=i+1){ log(i); }") == Object());
+        REQUIRE(RunWithGuard("for (var i=0; i != 10; i=i+1){ log(i); }") == Object());
         REQUIRE(listener.history() == std::vector<Object>{0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0});
     }
 
@@ -74,17 +74,17 @@ fun fib(n) {\
     return fib(n - 2) + fib(n - 1);\
 }"s;
 
-        REQUIRE(RunFullScript(fib + "fib(0);"s) == 0.0);
-        REQUIRE(RunFullScript(fib + "fib(1);"s) == 1.0);
-        REQUIRE(RunFullScript(fib + "fib(2);"s) == 1.0);
-        REQUIRE(RunFullScript(fib + "fib(3);"s) == 2.0);
-        REQUIRE(RunFullScript(fib + "fib(4);"s) == 3.0);
-        REQUIRE(RunFullScript(fib + "fib(5);"s) == 5.0);
-        REQUIRE(RunFullScript(fib + "fib(6);"s) == 8.0);
-        REQUIRE(RunFullScript(fib + "fib(7);"s) == 13.0);
-        REQUIRE(RunFullScript(fib + "fib(8);"s) == 21.0);
-        REQUIRE(RunFullScript(fib + "fib(9);"s) == 34.0);
-        REQUIRE(RunFullScript(fib + "fib(10);"s) == 55.0);
+        REQUIRE(RunWithGuard(fib + "fib(0);"s) == 0.0);
+        REQUIRE(RunWithGuard(fib + "fib(1);"s) == 1.0);
+        REQUIRE(RunWithGuard(fib + "fib(2);"s) == 1.0);
+        REQUIRE(RunWithGuard(fib + "fib(3);"s) == 2.0);
+        REQUIRE(RunWithGuard(fib + "fib(4);"s) == 3.0);
+        REQUIRE(RunWithGuard(fib + "fib(5);"s) == 5.0);
+        REQUIRE(RunWithGuard(fib + "fib(6);"s) == 8.0);
+        REQUIRE(RunWithGuard(fib + "fib(7);"s) == 13.0);
+        REQUIRE(RunWithGuard(fib + "fib(8);"s) == 21.0);
+        REQUIRE(RunWithGuard(fib + "fib(9);"s) == 34.0);
+        REQUIRE(RunWithGuard(fib + "fib(10);"s) == 55.0);
     }
 
     TEST_CASE("Can return local function.") {
@@ -102,7 +102,7 @@ var counter = makeCounter();\
 log(counter());\
 log(counter());\
 log(counter());";
-        REQUIRE(RunFullScript(script) == Object());
+        REQUIRE(RunWithGuard(script) == Object());
         REQUIRE(listener.history() == std::vector<Object>{1.0, 2.0, 3.0});
     }
 
@@ -118,12 +118,12 @@ var a = \"global\";\
     log(getA());\
 }";
         LogListener listener;
-        REQUIRE(RunFullScript(script) == Object());
+        REQUIRE(RunWithGuard(script) == Object());
         REQUIRE(listener.history() == std::vector<Object>{"global"s, "global"s});
     }
 
     TEST_CASE("Can create class instance.") {
-        REQUIRE(RunFullScript("class Test{} Test();").isLoxInstance());
+        REQUIRE(RunWithGuard("class Test{} Test();").isLoxInstance());
     }
 
     TEST_CASE("Can set and get property on class instance.") {
@@ -131,7 +131,7 @@ var a = \"global\";\
 var test = Test();\
 test.property = 3;\
 test.property;";
-        REQUIRE(RunFullScript(script) == Object(3.0));
+        REQUIRE(RunWithGuard(script) == Object(3.0));
     }
 
     TEST_CASE("Class can have methods.") {
@@ -143,7 +143,7 @@ class Test{\
 }\
 var test = Test();\
 test.method();";
-        REQUIRE(RunFullScript(script) == Object("Method return value"s));
+        REQUIRE(RunWithGuard(script) == Object("Method return value"s));
     }
 
     TEST_CASE("Method can access this.") {
@@ -154,7 +154,7 @@ class Test{\
     }\
 }\
 Test().method();";
-        REQUIRE(RunFullScript(script).isLoxInstance());
+        REQUIRE(RunWithGuard(script).isLoxInstance());
     }
 
     TEST_CASE("Class can have initializer.") {
@@ -168,7 +168,7 @@ class Test{\
     }\
 }\
 Test(5).get();";
-        REQUIRE(RunFullScript(script) == Object(5.0));
+        REQUIRE(RunWithGuard(script) == Object(5.0));
     }
 
     TEST_CASE("Can run line by line (REPL)") {
@@ -187,7 +187,7 @@ class Test{\
     init() {}\
 }\
 Test().init();";
-        REQUIRE(RunFullScript(script).isLoxInstance());
+        REQUIRE(RunWithGuard(script).isLoxInstance());
 
     }
 
@@ -216,7 +216,7 @@ class Test{\
         auto const script = "\
 class Super{}\
 class Sub < Super{}";
-        REQUIRE(RunFullScript(script) == Object());
+        REQUIRE(RunWithGuard(script) == Object());
     }
 
     TEST_CASE("Class cannot interherit from itself.") {
@@ -241,6 +241,7 @@ class Class < test {}";
 class Super {superfun(){return 1.0;}}\
 class Sub < Super {}\
 Sub().superfun();";
-        REQUIRE(RunFullScript(script) == Object(1.0));
+        REQUIRE(RunWithGuard(script) == Object(1.0));
     }
+
 }
