@@ -14,7 +14,7 @@ namespace {
     };
 
     enum class ClassType {
-        NONE, CLASS
+        NONE, CLASS, SUBCLASS
     };
 
     using Scopes = std::vector<std::unordered_map<std::string, bool>>;
@@ -120,6 +120,7 @@ namespace {
         define(stmt.name(), context.scopes);
         
         if (stmt.superclass()) {
+            context.currentClass = ClassType::SUBCLASS;
             if (stmt.name().lexeme() == stmt.superclass()->name().lexeme()) {
                 Lox::error(stmt.superclass()->name(), "A class can't inherit from itself.");
             }
@@ -128,6 +129,7 @@ namespace {
 
         beginScope(context.scopes);
         context.scopes.back()["this"] = true;
+        if (stmt.superclass()) context.scopes.back()["super"] = true;
 
         for (auto const* method : stmt.methods()) {
             resolveFunction(*method, method->name().lexeme() == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD, context);
@@ -183,11 +185,20 @@ namespace {
     }
     void resolveThisExpr(ThisExpr const& expr, ResolverContext& context) {
         if (context.currentClass == ClassType::NONE) {
-            Lox::error(expr.keyword(), "Can't use this outside of a class.");
+            Lox::error(expr.keyword(), "Can't use 'this' outside of a class.");
         }
         else {
             resolveLocal(expr, expr.keyword(), context);
         }
+    }
+    void resolveSuperExpr(SuperExpr const& expr, ResolverContext& context) {
+        if (context.currentClass == ClassType::NONE) {
+            Lox::error(expr.keyword(), "Can't use 'super' outside of a class.");
+        }
+        else if (context.currentClass == ClassType::CLASS) {
+            Lox::error(expr.keyword(), "Can't use 'super' in a class with no superclass.");
+        }
+        resolveLocal(expr, expr.keyword(), context);
     }
 
     template <typename T>
@@ -224,7 +235,8 @@ namespace {
             ResolveExprFuncT<CallExpr>(resolveCallExpr),
             ResolveExprFuncT<GetExpr>(resolveGetExpr),
             ResolveExprFuncT<SetExpr>(resolveSetExpr),
-            ResolveExprFuncT<ThisExpr>(resolveThisExpr)
+            ResolveExprFuncT<ThisExpr>(resolveThisExpr),
+            ResolveExprFuncT<SuperExpr>(resolveSuperExpr)
         );
 
         resolveDispatcher.dispatch(expr, context);

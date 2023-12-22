@@ -45,3 +45,6 @@ SetExpr::SetExpr(Expr const* object, Token const& name, Expr const* value) : mOb
 
 ThisExpr::ThisExpr(Token const& keyword) : mKeyword(keyword) {
 }
+
+SuperExpr::SuperExpr(Token const& keyword, Token const& method) : mKeyword(keyword), mMethod(method) {
+}

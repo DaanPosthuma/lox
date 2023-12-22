@@ -388,6 +388,13 @@ Expr const* Parser::primary() {
     if (match<TokenType::TRUE>()) return new LiteralExpr(true);
     if (match<TokenType::NIL>()) return new LiteralExpr({});
     
+    if (match<TokenType::SUPER>()) {
+        auto const keyword = previous();
+        consume<TokenType::DOT>("Expect '.' after super.");
+        auto const method = consume<TokenType::IDENTIFIER>("Expect superclass method name.");
+        return new SuperExpr(keyword, method);
+    }
+
     if (match<TokenType::NUMBER, TokenType::STRING>()) {
         return new LiteralExpr(previous().literal());
     }

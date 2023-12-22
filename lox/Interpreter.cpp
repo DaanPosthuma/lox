@@ -220,6 +220,12 @@ namespace {
     Object evaluateThisExpr(ThisExpr const& expr, Environment& environment) {
         return lookupVariable(expr.keyword(), expr, environment);
     }
+    Object evaluateSuperExpr(SuperExpr const& expr, Environment& environment) {
+        auto const distance = Lox::locals.at(&expr) + 1;
+        auto const super = environment.getAt(distance, expr.keyword().lexeme());
+        assert(super.isLoxClass());
+        return static_cast<LoxClass>(super).findMethod(expr.method().lexeme());
+    }
 
     // Execute functions of concrete statements:
 
@@ -286,9 +292,16 @@ namespace {
         }() : std::nullopt;
 
         environment.define(stmt.name().lexeme(), Object());
+
+        auto const superEnvironment = superclass ? [&]() {
+            auto const superEnvironment = new Environment(&environment);
+            superEnvironment->define("super", *superclass);
+            return superEnvironment;
+        }() : &environment;
+
         auto methods = std::unordered_map<std::string, LoxCallable>();
         for (auto method : stmt.methods()) {
-            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, environment, stmt.name().lexeme())));
+            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, *superEnvironment, stmt.name().lexeme())));
         }
         environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), superclass, methods));
         return {};
@@ -312,7 +325,8 @@ namespace {
             EvaluateExprFuncT<CallExpr>(evaluateCallExpr),
             EvaluateExprFuncT<GetExpr>(evaluateGetExpr),
             EvaluateExprFuncT<SetExpr>(evaluateSetExpr),
-            EvaluateExprFuncT<ThisExpr>(evaluateThisExpr)
+            EvaluateExprFuncT<ThisExpr>(evaluateThisExpr),
+            EvaluateExprFuncT<SuperExpr>(evaluateSuperExpr)
         );
 
         return evaluateDispatcher.dispatch(expr, environment);

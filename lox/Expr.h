@@ -137,3 +137,15 @@ public:
 private:
     Token mKeyword;
 };
+
+class SuperExpr : public Expr {
+public:
+    SuperExpr(Token const& keyword, Token const& method);
+
+    Token const& keyword() const { return mKeyword; }
+    Token const& method() const { return mMethod; }
+
+private:
+    Token mKeyword;
+    Token mMethod;
+};

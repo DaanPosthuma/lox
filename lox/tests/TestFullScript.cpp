@@ -244,4 +244,28 @@ Sub().superfun();";
         REQUIRE(RunWithGuard(script) == Object(1.0));
     }
 
+    TEST_CASE("Can specify super to explicitly call method on superclass.") {
+        auto const script = "\
+class Super {method(){return 10.0;}}\
+class Sub < Super {method(){return super.method() - 10;}}\
+Sub().method();";
+        REQUIRE(RunWithGuard(script) == Object(0.0));
+    }
+
+    TEST_CASE("Super messy.") {
+        auto const script = "\
+class A {method(){print \"A method\";}}\
+class B < A {method(){print \"B method\";} test(){super.method();}}\
+class C < B {}\
+C().method();\
+C().test();\
+var ctest = C().test;\
+var cmethod = C().method;\
+cmethod();\
+ctest();";
+        TestGuard guard;
+        REQUIRE(RunWitoutGuard(script) == Object());
+        REQUIRE(guard.capturedLinesCout() == std::vector{ "B method"s , "A method"s , "B method"s , "A method"s });
+
+    }
 }

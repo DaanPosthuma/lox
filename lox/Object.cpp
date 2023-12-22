@@ -19,7 +19,7 @@ namespace {
 }
 
 std::string Object::toString() const {
-    if (isString()) return '"' + std::get<std::string>(mData) + '"';
+    if (isString()) return std::get<std::string>(mData);
     else if (isDouble()) return doubleToString(std::get<double>(mData));
     else if (isBoolean()) return std::get<bool>(mData) ? "true" : "false";
     else if (isNil()) return "Nil";
