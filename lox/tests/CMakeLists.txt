@@ -9,5 +9,5 @@ FetchContent_MakeAvailable(Catch2)
 include_directories(..)
 include(CTest)
 
-add_executable(tests TestScanner.cpp TestParser.cpp TestResolver.cpp TestInterpreter.cpp TestFullScript.cpp LogListener.cpp "TestGuard.cpp")
+add_executable(tests TestScanner.cpp TestParser.cpp TestResolver.cpp TestInterpreter.cpp TestFullScript.cpp LogListener.cpp TestGuard.cpp TestExpr.cpp)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain loxlib)

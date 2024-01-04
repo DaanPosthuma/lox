@@ -3,9 +3,29 @@
 #include "Token.h"
 #include <vector>
 
+#define ADDEQUALITY(CONCRETETYPE) std::partial_ordering operator<=>(CONCRETETYPE const& other) const = default;\
+bool IsEqual(Expr const& rhs) const override { return this->IsEqualImpl(rhs); }
+
 class Expr {
 public:
+    Expr() {
+        static int exprid = 0;
+        mExprId = exprid++;
+    }
     virtual ~Expr() = default;
+    std::partial_ordering operator<=>(Expr const& other) const = default;
+
+    virtual bool IsEqual(Expr const& rhs) const = 0;
+    
+protected:
+    template <class ConcreteT>
+    bool IsEqualImpl(this ConcreteT const& lhs, Expr const& rhs) {
+        if (auto concreteRhs = dynamic_cast<ConcreteT const*>(&rhs)) {
+            return lhs == *concreteRhs;
+        }
+        return false;
+    }
+    int mExprId;
 };
 
 class BinaryExpr : public Expr {
@@ -15,6 +35,8 @@ public:
     Expr const& left() const { return *mLeft; }
     Token const& operatr() const { return mOperator; }
     Expr const& right() const { return *mRight; }
+
+    ADDEQUALITY(BinaryExpr)
 
 private:
     Expr const* mLeft;
@@ -29,6 +51,8 @@ public:
     Token const& operatr() const { return mOperator; }
     Expr const& right() const { return *mRight; }
 
+    ADDEQUALITY(UnaryExpr)
+
 private:
     Token mOperator;
     Expr const* mRight;
@@ -40,6 +64,8 @@ public:
 
     Expr const& expression() const { return *mExpression; }
 
+    ADDEQUALITY(GroupingExpr)
+
 private:
     Expr const* mExpression;
 };
@@ -49,6 +75,8 @@ public:
     LiteralExpr(Object const& value);
 
     Object const& value() const { return mValue; }
+
+    ADDEQUALITY(LiteralExpr)
 
 private:
     Object mValue;
@@ -60,6 +88,8 @@ public:
 
     Token const& name() const { return mName; }
 
+    ADDEQUALITY(VariableExpr)
+
 private:
     Token mName;
 };
@@ -70,6 +100,8 @@ public:
 
     Token const& name() const { return mName; }
     Expr const& value() const { return *mValue; }
+
+    ADDEQUALITY(AssignExpr)
 
 private:
     Token mName;
@@ -83,6 +115,8 @@ public:
     Expr const& left() const { return *mLeft; }
     Token const& operatr() const { return mOperator; }
     Expr const& right() const { return *mRight; }
+
+    ADDEQUALITY(LogicalExpr)
 
 private:
     Expr const* mLeft;
@@ -98,6 +132,8 @@ public:
     Token const& paren() const { return mParen; }
     std::vector<Expr const*> const& arguments() const { return mArguments; }
 
+    ADDEQUALITY(CallExpr)
+
 private:
     Expr const* mCallee;
     Token mParen;
@@ -109,6 +145,8 @@ public:
     GetExpr(Expr const* object, Token const& name);
     Expr const& object() const { return *mObject; }
     Token const& name() const { return mName; }
+
+    ADDEQUALITY(GetExpr)
 
 private:
     Expr const* mObject;
@@ -122,6 +160,8 @@ public:
     Token const& name() const { return mName; }
     Expr const& value() const { return *mValue; }
 
+    ADDEQUALITY(SetExpr)
+
 private:
     Expr const* mObject;
     Token mName;
@@ -134,6 +174,8 @@ public:
 
     Token const& keyword() const { return mKeyword; }
 
+    ADDEQUALITY(ThisExpr)
+
 private:
     Token mKeyword;
 };
@@ -144,6 +186,8 @@ public:
 
     Token const& keyword() const { return mKeyword; }
     Token const& method() const { return mMethod; }
+
+    ADDEQUALITY(SuperExpr)
 
 private:
     Token mKeyword;

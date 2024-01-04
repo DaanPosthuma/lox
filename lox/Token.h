@@ -18,11 +18,12 @@ public:
     std::string const& lexeme() const { return mLexeme; }
     Object const& literal() const { return mLiteral; }
     int line() const { return mLine; }
+    std::partial_ordering operator<=>(Token const& other) const = default;
 
 private:
-
     TokenType mTokenType;
     std::string mLexeme;
     Object mLiteral;
     int mLine;
+
 };

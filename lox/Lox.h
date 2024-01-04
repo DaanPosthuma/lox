@@ -1,12 +1,35 @@
 #pragma once
 
 #include "Resolver.h"
+#include "Expr.h"
 #include <string>
+#include <cassert>
 
 class Environment;
 class Token;
 
-using ResolvedLocals = std::unordered_map<Expr const*, int>;
+struct ExprHash {
+    auto operator()(Expr const* expr) const -> std::size_t {
+        return 0;
+    }
+};
+
+struct ExprEq {
+    auto operator()(
+        Expr const* lhs,
+        Expr const* rhs
+        ) const -> bool {
+        auto const ptrsEq = lhs == rhs;
+        auto const logicalEq = lhs->IsEqual(*rhs);
+        if (ptrsEq) assert(logicalEq);
+        if (!ptrsEq && logicalEq) {
+            int test = 3;
+        }
+        return logicalEq;
+    }
+};
+
+using ResolvedLocals = std::unordered_map<Expr const*, int, ExprHash, ExprEq>;
 
 class Lox {
 public:
