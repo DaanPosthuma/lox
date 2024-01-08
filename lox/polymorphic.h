@@ -319,6 +319,16 @@ namespace xyz {
         }
     };  // namespace xyz
 
+    template <class BaseT, class ConcreteT>
+    polymorphic<BaseT> make_polymorphic(ConcreteT const& t) {
+        return polymorphic<BaseT>(std::in_place_type<ConcreteT>, t);
+    }
+
+    template <class T>
+    T const* get_raw_pointer(xyz::polymorphic<T> const& p) {
+        return p.operator->();
+    }
+
 }  // namespace xyz
 
 #endif  // XYZ_POLYMORPHIC_H_

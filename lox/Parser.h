@@ -1,8 +1,9 @@
 #pragma once
 
+#include "polymorphic.h"
 #include <vector>
 
 class Stmt;
 class Token;
 
-std::vector<Stmt const*> parse(std::vector<Token> const& tokens);
+std::vector<xyz::polymorphic<Stmt>> parse(std::vector<Token> const& tokens);

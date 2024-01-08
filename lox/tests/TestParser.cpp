@@ -25,14 +25,14 @@ namespace {
         auto const printNumber = parse({ tPRINT, tNUMBER, tSEMICOLON, tEND_OF_FILE });
         REQUIRE(!Lox::hadError);
         REQUIRE(printNumber.size() == 1);
-        REQUIRE(dynamic_cast<PrintStmt const*>(printNumber.front()));
+        REQUIRE(dynamic_cast<PrintStmt const*>(xyz::get_raw_pointer(printNumber.front())));
     }
 
     TEST_CASE("Parser produces var statement") {
         auto const printNumber = parse({ tVAR, tIDENTIFIER, tEQUAL, tSTRING, tSEMICOLON, tEND_OF_FILE });
         REQUIRE(!Lox::hadError);
         REQUIRE(printNumber.size() == 1);
-        REQUIRE(dynamic_cast<VarStmt const*>(printNumber.front()));
+        REQUIRE(dynamic_cast<VarStmt const*>(xyz::get_raw_pointer(printNumber.front())));
     }
 
 }

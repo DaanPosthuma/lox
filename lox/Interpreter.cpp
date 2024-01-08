@@ -186,7 +186,7 @@ namespace {
     Object evaluateCallExpr(CallExpr const& expr, Environment& environment) {
         auto const callee = evaluate(expr.callee(), environment);
         auto arguments = std::vector<Object>();
-        auto const proj = [&](Expr const* expr) { return evaluate(*expr, environment); };
+        auto const proj = [&](xyz::polymorphic<Expr> expr) { return evaluate(*expr, environment); };
         std::ranges::transform(expr.arguments(), std::back_inserter(arguments), proj);
 
         if (callee.isLoxCallable()) {
@@ -200,7 +200,7 @@ namespace {
         }
     }
     Object evaluateGetExpr(GetExpr const& expr, Environment& environment) {
-        auto const object = evaluate(expr.object(), environment);
+        auto const object = evaluate(*expr.object(), environment);
         if (object.isLoxInstance()) {
             return static_cast<LoxInstance>(object).get(expr.name());
         }
@@ -239,8 +239,8 @@ namespace {
         {
             execute(stmt.thenBranch(), environment);
         }
-        else if (auto const elseBranch = stmt.elseBranch()) {
-            execute(*elseBranch, environment);
+        else if (auto const& elseBranch = stmt.elseBranch()) {
+            execute(**elseBranch, environment);
         }
         return {};
     }
@@ -259,7 +259,7 @@ namespace {
     }
 
     Object executeVarStmt(VarStmt const& stmt, Environment& environment) {
-        auto const value = stmt.initializer() ? evaluate(*stmt.initializer(), environment) : Object();
+        auto const value = stmt.initializer() ? evaluate(**stmt.initializer(), environment) : Object();
         environment.define(stmt.name().lexeme(), value);
         return {};
     }
@@ -267,10 +267,9 @@ namespace {
     Object executeBlockStmt(BlockStmt const& stmt, Environment& environment) {
         auto blockEnvironment = new Environment(&environment);
         auto result = Object{};
-        std::ranges::for_each(stmt.statements(), [&](auto const* stmt) {
-            assert(stmt && "Statement cannot be null.");
+        for (auto const& stmt : stmt.statements()) {
             result = execute(*stmt, *blockEnvironment);
-        });
+        }
         return result;
     }
 
@@ -280,7 +279,7 @@ namespace {
     }
 
     Object executeReturnStmt(ReturnStmt const& stmt, Environment& environment) {
-        auto const value = stmt.value() ? evaluate(*stmt.value(), environment) : Object{};
+        auto const value = stmt.value() ? evaluate(**stmt.value(), environment) : Object{};
         throw Return{ value };
     }
 
@@ -300,8 +299,8 @@ namespace {
         }() : &environment;
 
         auto methods = std::unordered_map<std::string, LoxCallable>();
-        for (auto method : stmt.methods()) {
-            methods.insert(std::pair(method->name().lexeme(), loxCallableFromFunctionStmt(*method, *superEnvironment, stmt.name().lexeme())));
+        for (auto const& method : stmt.methods()) {
+            methods.insert(std::pair(method.name().lexeme(), loxCallableFromFunctionStmt(method, *superEnvironment, stmt.name().lexeme())));
         }
         environment.assign(stmt.name(), LoxClass(stmt.name().lexeme(), superclass, methods));
         return {};
@@ -354,11 +353,10 @@ namespace {
     }
 }
 
-Object interpret(std::vector<Stmt const*> const& statements) {
+Object interpret(std::vector<xyz::polymorphic<Stmt>> const& statements) {
     try {
         auto result = Object();
-        for (auto const* statement : statements) {
-            assert(statement && "Statement cannot be nullptr");
+        for (auto const& statement : statements) {
             result = execute(*statement, Lox::globals);
         }
         return result;

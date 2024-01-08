@@ -9,27 +9,21 @@ class Environment;
 class Token;
 
 struct ExprHash {
-    auto operator()(Expr const* expr) const -> std::size_t {
+    auto operator()(xyz::polymorphic<Expr> const& expr) const -> std::size_t {
         return 0;
     }
 };
 
 struct ExprEq {
     auto operator()(
-        Expr const* lhs,
-        Expr const* rhs
+        xyz::polymorphic<Expr> const& lhs,
+        xyz::polymorphic<Expr> const& rhs
         ) const -> bool {
-        auto const ptrsEq = lhs == rhs;
-        auto const logicalEq = lhs->IsEqual(*rhs);
-        if (ptrsEq) assert(logicalEq);
-        if (!ptrsEq && logicalEq) {
-            int test = 3;
-        }
-        return logicalEq;
+        return lhs->IsEqual(*rhs);
     }
 };
 
-using ResolvedLocals = std::unordered_map<Expr const*, int, ExprHash, ExprEq>;
+using ResolvedLocals = std::unordered_map<xyz::polymorphic<Expr>, int, ExprHash, ExprEq>;
 
 class Lox {
 public:

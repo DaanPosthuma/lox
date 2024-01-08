@@ -1,9 +1,10 @@
 #pragma once
 
-#include <unordered_map>
+#include "polymorphic.h"
+#include <vector>
 
 class Expr;
 class Stmt;
 
-void resolve(std::vector<Stmt const*> const& stmt);
+void resolve(std::vector<xyz::polymorphic<Stmt>> const& stmt);
 

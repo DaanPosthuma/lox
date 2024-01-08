@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Token.h"
+#include "polymorphic.h"
 #include <vector>
 
-#define ADDEQUALITY(CONCRETETYPE) std::partial_ordering operator<=>(CONCRETETYPE const& other) const = default;\
-bool IsEqual(Expr const& rhs) const override { return this->IsEqualImpl(rhs); }
+//#define ADDEQUALITY(CONCRETETYPE) std::partial_ordering operator<=>(CONCRETETYPE const& other) const = default;\
+//bool IsEqual(Expr const& rhs) const override { return this->IsEqualImpl(rhs); }
+
+#define ADDEQUALITY(CONCRETETYPE) bool IsEqual(Expr const& rhs) const override { return false; }
 
 class Expr {
 public:
@@ -16,21 +19,27 @@ public:
     std::partial_ordering operator<=>(Expr const& other) const = default;
 
     virtual bool IsEqual(Expr const& rhs) const = 0;
+
+    //friend bool operator==(xyz::polymorphic<Expr> const& lhs, xyz::polymorphic<Expr> const& rhs);
     
 protected:
-    template <class ConcreteT>
-    bool IsEqualImpl(this ConcreteT const& lhs, Expr const& rhs) {
-        if (auto concreteRhs = dynamic_cast<ConcreteT const*>(&rhs)) {
-            return lhs == *concreteRhs;
-        }
-        return false;
-    }
+    //template <class ConcreteT>
+    //bool IsEqualImpl(this ConcreteT const& lhs, Expr const& rhs) {
+    //    if (auto concreteRhs = dynamic_cast<ConcreteT const*>(&rhs)) {
+    //        return lhs == *concreteRhs;
+    //    }
+    //    return false;
+    //}
     int mExprId;
 };
 
+inline bool operator==(xyz::polymorphic<Expr> const& lhs, xyz::polymorphic<Expr> const& rhs) {
+    return lhs->IsEqual(*rhs);
+}
+
 class BinaryExpr : public Expr {
 public:
-    BinaryExpr(Expr const* left, Token const& operatr, Expr const* right);
+    BinaryExpr(xyz::polymorphic<Expr> left, Token const& operatr, xyz::polymorphic<Expr> right);
 
     Expr const& left() const { return *mLeft; }
     Token const& operatr() const { return mOperator; }
@@ -39,14 +48,14 @@ public:
     ADDEQUALITY(BinaryExpr)
 
 private:
-    Expr const* mLeft;
+    xyz::polymorphic<Expr> mLeft;
     Token mOperator;
-    Expr const* mRight;
+    xyz::polymorphic<Expr> mRight;
 };
 
 class UnaryExpr : public Expr {
 public:
-    UnaryExpr(Token const& operatr, Expr const* right);
+    UnaryExpr(Token const& operatr, xyz::polymorphic<Expr> right);
     
     Token const& operatr() const { return mOperator; }
     Expr const& right() const { return *mRight; }
@@ -55,19 +64,19 @@ public:
 
 private:
     Token mOperator;
-    Expr const* mRight;
+    xyz::polymorphic<Expr> mRight;
 };
 
 class GroupingExpr : public Expr {
 public:
-    GroupingExpr(Expr const* expression);
+    GroupingExpr(xyz::polymorphic<Expr> expression);
 
     Expr const& expression() const { return *mExpression; }
 
     ADDEQUALITY(GroupingExpr)
 
 private:
-    Expr const* mExpression;
+    xyz::polymorphic<Expr> mExpression;
 };
 
 class LiteralExpr : public Expr {
@@ -96,7 +105,7 @@ private:
 
 class AssignExpr : public Expr {
 public:
-    AssignExpr(Token const& name, Expr const* value);
+    AssignExpr(Token const& name, xyz::polymorphic<Expr> value);
 
     Token const& name() const { return mName; }
     Expr const& value() const { return *mValue; }
@@ -105,12 +114,12 @@ public:
 
 private:
     Token mName;
-    Expr const* mValue;
+    xyz::polymorphic<Expr> mValue;
 };
 
 class LogicalExpr : public Expr {
 public:
-    LogicalExpr(Expr const* left, Token const& operatr, Expr const* right);
+    LogicalExpr(xyz::polymorphic<Expr> left, Token const& operatr, xyz::polymorphic<Expr> right);
 
     Expr const& left() const { return *mLeft; }
     Token const& operatr() const { return mOperator; }
@@ -119,43 +128,43 @@ public:
     ADDEQUALITY(LogicalExpr)
 
 private:
-    Expr const* mLeft;
+    xyz::polymorphic<Expr> mLeft;
     Token mOperator;
-    Expr const* mRight;
+    xyz::polymorphic<Expr> mRight;
 };
 
 class CallExpr : public Expr {
 public:
-    CallExpr(Expr const* callee, Token const& paren, std::vector<Expr const*> const& arguments);
+    CallExpr(xyz::polymorphic<Expr> callee, Token const& paren, std::vector<xyz::polymorphic<Expr>> const& arguments);
 
     Expr const& callee() const { return *mCallee; }
     Token const& paren() const { return mParen; }
-    std::vector<Expr const*> const& arguments() const { return mArguments; }
+    std::vector<xyz::polymorphic<Expr>> const& arguments() const { return mArguments; }
 
     ADDEQUALITY(CallExpr)
 
 private:
-    Expr const* mCallee;
+    xyz::polymorphic<Expr> mCallee;
     Token mParen;
-    std::vector<Expr const*> mArguments;
+    std::vector<xyz::polymorphic<Expr>> mArguments;
 };
 
 class GetExpr : public Expr {
 public:
-    GetExpr(Expr const* object, Token const& name);
-    Expr const& object() const { return *mObject; }
+    GetExpr(xyz::polymorphic<Expr> object, Token const& name);
+    xyz::polymorphic<Expr> const& object() const { return mObject; }
     Token const& name() const { return mName; }
 
     ADDEQUALITY(GetExpr)
 
 private:
-    Expr const* mObject;
+    xyz::polymorphic<Expr> mObject;
     Token mName;
 };
 
 class SetExpr : public Expr {
 public:
-    SetExpr(Expr const* object, Token const& name, Expr const* value);
+    SetExpr(xyz::polymorphic<Expr> object, Token const& name, xyz::polymorphic<Expr> value);
     Expr const& object() const { return *mObject; }
     Token const& name() const { return mName; }
     Expr const& value() const { return *mValue; }
@@ -163,9 +172,9 @@ public:
     ADDEQUALITY(SetExpr)
 
 private:
-    Expr const* mObject;
+    xyz::polymorphic<Expr> mObject;
     Token mName;
-    Expr const* mValue;
+    xyz::polymorphic<Expr> mValue;
 };
 
 class ThisExpr : public Expr {

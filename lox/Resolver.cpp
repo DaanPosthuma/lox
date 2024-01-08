@@ -43,10 +43,10 @@ namespace {
         if (scopes.empty()) return;
         scopes.back()[name.lexeme()] = true;
     }
-    void resolveLocal(Expr const& expr, Token const& name, ResolverContext& context) {
+    void resolveLocal(xyz::polymorphic<Expr> const& expr, Token const& name, ResolverContext& context) {
         for (auto i = static_cast<int>(context.scopes.size()) - 1; i >= 0; --i) {
             if (context.scopes[i].contains(name.lexeme())) {
-                Lox::locals[&expr] = static_cast<int>(context.scopes.size()) - 1 - i;
+                Lox::locals[expr] = static_cast<int>(context.scopes.size()) - 1 - i;
                 return;
             }
         }
@@ -71,13 +71,13 @@ namespace {
     void resolveVarStmt(VarStmt const& stmt, ResolverContext& context) {
         declare(stmt.name(), context.scopes);
         if (stmt.initializer()) {
-            resolve(*stmt.initializer(), context);
+            resolve(**stmt.initializer(), context);
         }
         define(stmt.name(), context.scopes);
     }
     void resolveBlockStmt(BlockStmt const& stmt, ResolverContext& context) {
         beginScope(context.scopes);
-        for (auto* stmt : stmt.statements()) {
+        for (auto const& stmt : stmt.statements()) {
             resolve(*stmt, context);
         }
         endScope(context.scopes);
@@ -93,7 +93,7 @@ namespace {
     void resolveIfStmt(IfStmt const& stmt, ResolverContext& context) {
         resolve(stmt.condition(), context);
         resolve(stmt.thenBranch(), context);
-        if (stmt.elseBranch()) resolve(*stmt.elseBranch(), context);
+        if (stmt.elseBranch()) resolve(**stmt.elseBranch(), context);
     }
     void resolvePrintStmt(PrintStmt const& stmt, ResolverContext& context) {
         resolve(stmt.expression(), context);
@@ -110,7 +110,7 @@ namespace {
             if (context.currentFunction == FunctionType::INITIALIZER) {
                 Lox::error(stmt.keyword(), "Can't return a value from an initializer.");
             }
-            resolve(*stmt.value(), context);
+            resolve(**stmt.value(), context);
         }
     }
     void resolveClassStmt(ClassStmt const& stmt, ResolverContext& context) {
@@ -131,8 +131,8 @@ namespace {
         context.scopes.back()["this"] = true;
         if (stmt.superclass()) context.scopes.back()["super"] = true;
 
-        for (auto const* method : stmt.methods()) {
-            resolveFunction(*method, method->name().lexeme() == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD, context);
+        for (auto const& method : stmt.methods()) {
+            resolveFunction(method, method.name().lexeme() == "init" ? FunctionType::INITIALIZER : FunctionType::METHOD, context);
         }
 
         endScope(context.scopes);
@@ -172,12 +172,12 @@ namespace {
     }
     void resolveCallExpr(CallExpr const& expr, ResolverContext& context) {
         resolve(expr.callee(), context);
-        for (auto const* arg : expr.arguments()) {
+        for (auto const& arg : expr.arguments()) {
             resolve(*arg, context);
         }
     }
     void resolveGetExpr(GetExpr const& expr, ResolverContext& context) {
-        resolve(expr.object(), context);
+        resolve(*expr.object(), context);
     }
     void resolveSetExpr(SetExpr const& expr, ResolverContext& context) {
         resolve(expr.value(), context);
@@ -243,9 +243,9 @@ namespace {
     }
 }
 
-void resolve(std::vector<Stmt const*> const& statements) {
+void resolve(std::vector<xyz::polymorphic<Stmt>> const& statements) {
     ResolverContext context;
-    for (auto* stmt : statements) {
+    for (auto const& stmt : statements) {
         resolve(*stmt, context);
     }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Token.h"
+#include "polymorphic.h"
 #include <vector>
 
 class Expr;
@@ -12,65 +13,65 @@ public:
 
 class ExpressionStmt : public Stmt {
 public:
-    ExpressionStmt(Expr const* expression);
+    ExpressionStmt(xyz::polymorphic<Expr> expression);
     Expr const& expression() const { return *mExpression; }
 
 private:
-    Expr const* mExpression;
+    xyz::polymorphic<Expr> mExpression;
 };
 
 class PrintStmt : public Stmt {
 public:
-    PrintStmt(Expr const* expression);
+    PrintStmt(xyz::polymorphic<Expr> expression);
     Expr const& expression() const { return *mExpression; }
 
 private:
-    Expr const* mExpression;
+    xyz::polymorphic<Expr> mExpression;
 };
 
 class VarStmt : public Stmt {
 public:
-    VarStmt(Token const& name, Expr const* initializer);
+    VarStmt(Token const& name, std::optional<xyz::polymorphic<Expr>> initializer);
     Token const& name() const { return mName; }
-    Expr const* initializer() const { return mInitializer; }
+    std::optional<xyz::polymorphic<Expr>> initializer() const { return mInitializer; }
 
 private:
     Token mName;
-    Expr const* mInitializer;
+    std::optional<xyz::polymorphic<Expr>> mInitializer;
 };
 
 class BlockStmt : public Stmt {
 public:
-    BlockStmt(std::vector<Stmt const*> const& statements);
-    std::vector<Stmt const*> const& statements() const { return mStatements; }
+    BlockStmt(std::vector<xyz::polymorphic<Stmt>> const& statements);
+    std::vector<xyz::polymorphic<Stmt>> const& statements() const { return mStatements; }
 
 private:
-    std::vector<Stmt const*> mStatements;
+    std::vector<xyz::polymorphic<Stmt>> mStatements;
 };
 
 class IfStmt : public Stmt {
 public:
-    IfStmt(Expr const* condition, Stmt const* thenBranch, Stmt const* elseBranch);
+    IfStmt(xyz::polymorphic<Expr> condition, xyz::polymorphic<Stmt> thenBranch, std::optional<xyz::polymorphic<Stmt>> elseBranch);
     Expr const& condition() const { return *mCondition; }
     Stmt const& thenBranch() const { return *mThenBranch; }
-    Stmt const* elseBranch() const { return mElseBranch; }
+    std::optional<xyz::polymorphic<Stmt>> elseBranch() const { return mElseBranch; }
 
 private:
-    Expr const* mCondition;
-    Stmt const* mThenBranch;
-    Stmt const* mElseBranch;
+    xyz::polymorphic<Expr> mCondition;
+    xyz::polymorphic<Stmt> mThenBranch;
+    std::optional<xyz::polymorphic<Stmt>> mElseBranch;
 
 };
 
 class WhileStmt : public Stmt {
 public:
-    WhileStmt(Expr const* condition, Stmt const* const& body);
+    WhileStmt(xyz::polymorphic<Expr> condition, xyz::polymorphic<Stmt> const& body);
     Expr const& condition() const { return *mCondition; }
     Stmt const& body() const { return *mBody; }
 
 private:
-    Expr const* mCondition;
-    Stmt const* mBody;
+    xyz::polymorphic<Expr> mCondition;
+    xyz::polymorphic<Stmt> mBody;
 
 };
 
@@ -91,24 +92,24 @@ private:
 
 class ReturnStmt : public Stmt {
 public:
-    ReturnStmt(Token const& keyword, Expr const* value);
+    ReturnStmt(Token const& keyword, std::optional<xyz::polymorphic<Expr>> value);
     Token const& keyword() const { return mKeyword; }
-    Expr const* value() const { return mValue; }
+    std::optional<xyz::polymorphic<Expr>> value() const { return mValue; }
 
 private:
     Token mKeyword;
-    Expr const* mValue;
+    std::optional<xyz::polymorphic<Expr>> mValue;
 };
 
 class ClassStmt : public Stmt {
 public:
-    ClassStmt(Token const& name, VariableExpr const* superclass, std::vector<FunctionStmt const*> const& methods);
+    ClassStmt(Token const& name, VariableExpr const* superclass, std::vector<FunctionStmt> const& methods);
     Token const& name() const { return mName; }
     VariableExpr const* superclass() const { return mSuperclass; }
-    std::vector<FunctionStmt const*> const& methods() const { return mMethods; }
+    std::vector<FunctionStmt> const& methods() const { return mMethods; }
 
 private:
     Token mName;
     VariableExpr const* mSuperclass;
-    std::vector<FunctionStmt const*> mMethods;
+    std::vector<FunctionStmt> mMethods;
 };

@@ -4,6 +4,7 @@
 #include "Expr.h"
 #include "Stmt.h"
 #include "Lox.h"
+#include "polymorphic.h"
 
 namespace {
     struct ParseError {
@@ -14,33 +15,33 @@ namespace {
     class Parser {
     public:
         Parser(std::vector<Token> const& tokens) : mTokens(tokens) {}
-        std::vector<Stmt const*> parse();
+        std::vector<xyz::polymorphic<Stmt>> parse();
 
     private:
-        Stmt const* declaration();
-        ClassStmt const* classDeclaration();
-        VarStmt const* varDeclaration();
-        Stmt const* statement();
-        IfStmt const* ifStatement();
-        PrintStmt const* printStatement();
-        WhileStmt const* whileStatement();
-        ReturnStmt const* returnStatement();
-        Stmt const* forStatement();
-        BlockStmt const* blockStatement();
-        ExpressionStmt const* expressionStatement();
-        FunctionStmt const* function(std::string const& kind);
-        Expr const* expression();
-        Expr const* assignment();
-        Expr const* oor ();
-        Expr const* aand ();
-        Expr const* equality();
-        Expr const* comparison();
-        Expr const* term();
-        Expr const* factor();
-        Expr const* unary();
-        Expr const* call();
-        Expr const* finishCall(Expr const* callee);
-        Expr const* primary();
+        xyz::polymorphic<Stmt> declaration();
+        ClassStmt classDeclaration();
+        VarStmt varDeclaration();
+        xyz::polymorphic<Stmt> statement();
+        IfStmt ifStatement();
+        PrintStmt printStatement();
+        WhileStmt whileStatement();
+        ReturnStmt returnStatement();
+        xyz::polymorphic<Stmt> forStatement();
+        BlockStmt blockStatement();
+        ExpressionStmt expressionStatement();
+        FunctionStmt function(std::string const& kind);
+        xyz::polymorphic<Expr> expression();
+        xyz::polymorphic<Expr> assignment();
+        xyz::polymorphic<Expr> oor ();
+        xyz::polymorphic<Expr> aand ();
+        xyz::polymorphic<Expr> equality();
+        xyz::polymorphic<Expr> comparison();
+        xyz::polymorphic<Expr> term();
+        xyz::polymorphic<Expr> factor();
+        xyz::polymorphic<Expr> unary();
+        xyz::polymorphic<Expr> call();
+        xyz::polymorphic<Expr> finishCall(xyz::polymorphic<Expr> callee);
+        xyz::polymorphic<Expr> primary();
 
         void synchronise();
 
@@ -80,19 +81,19 @@ namespace {
     };
 }
 
-std::vector<Stmt const*> Parser::parse() {
-    auto statements = std::vector<Stmt const*>();
+std::vector<xyz::polymorphic<Stmt>> Parser::parse() {
+    auto statements = std::vector<xyz::polymorphic<Stmt>>();
     while (!isAtEnd()) {
         statements.push_back(declaration());
     }
     return statements;
 }
 
-Stmt const* Parser::declaration() {
+xyz::polymorphic<Stmt> Parser::declaration() {
     //try {
-    if (match<TokenType::CLASS>()) return classDeclaration();
-    if (match<TokenType::FUN>()) return function("function");
-    if (match<TokenType::VAR>()) return varDeclaration();
+    if (match<TokenType::CLASS>()) return xyz::make_polymorphic<Stmt>(classDeclaration());
+    if (match<TokenType::FUN>()) return xyz::make_polymorphic<Stmt>(function("function"));
+    if (match<TokenType::VAR>()) return xyz::make_polymorphic<Stmt>(varDeclaration());
     return statement();
     //}
     //catch (ParseError const& error) {
@@ -101,7 +102,7 @@ Stmt const* Parser::declaration() {
     //}
 }
 
-ClassStmt const* Parser::classDeclaration() {
+ClassStmt Parser::classDeclaration() {
     auto const name = consume<TokenType::IDENTIFIER>("Expect class name.");
 
     const auto superclass = match<TokenType::LESS>() ? [&] {
@@ -111,119 +112,119 @@ ClassStmt const* Parser::classDeclaration() {
 
     consume<TokenType::LEFT_BRACE>("Expect '{' before class body.");
 
-    std::vector<FunctionStmt const*> methods;
+    std::vector<FunctionStmt> methods;
     while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
         methods.push_back(function("method"));
     }
 
     consume<TokenType::RIGHT_BRACE>("Expect '}' after class body.");
 
-    return new ClassStmt(name, superclass, methods);
+    return ClassStmt(name, superclass, methods);
 }
 
-VarStmt const* Parser::varDeclaration() {
+VarStmt Parser::varDeclaration() {
     auto const& name = consume<TokenType::IDENTIFIER>("Expect variable name");
-    auto const initializer = match<TokenType::EQUAL>() ? expression() : new LiteralExpr({});
+    auto const initializer = match<TokenType::EQUAL>() ? std::optional(expression()) : std::nullopt;
     consume<TokenType::SEMICOLON>("Expect ';' after variable declaration.");
-    return new VarStmt(name, initializer);
+    return VarStmt(name, initializer);
 }
 
-Stmt const* Parser::statement() {
-    if (match<TokenType::IF>()) return ifStatement();
-    if (match<TokenType::WHILE>()) return whileStatement();
+xyz::polymorphic<Stmt> Parser::statement() {
+    if (match<TokenType::IF>()) return xyz::make_polymorphic<Stmt>(ifStatement());
+    if (match<TokenType::WHILE>()) return xyz::make_polymorphic<Stmt>(whileStatement());
     if (match<TokenType::FOR>()) return forStatement();
-    if (match<TokenType::PRINT>()) return printStatement();
-    if (match<TokenType::RETURN>()) return returnStatement();
-    if (match<TokenType::LEFT_BRACE>()) return blockStatement();
-    return expressionStatement();
+    if (match<TokenType::PRINT>()) return xyz::make_polymorphic<Stmt>(printStatement());
+    if (match<TokenType::RETURN>()) return xyz::make_polymorphic<Stmt>(returnStatement());
+    if (match<TokenType::LEFT_BRACE>()) return xyz::make_polymorphic<Stmt>(blockStatement());
+    return xyz::make_polymorphic<Stmt>(expressionStatement());
 }
 
-IfStmt const* Parser::ifStatement() {
+IfStmt Parser::ifStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'if'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after 'if'.");
     auto const thenBranch = statement();
-    auto const elseBranch = match<TokenType::ELSE>() ? statement() : nullptr;
-    return new IfStmt(condition, thenBranch, elseBranch);
+    auto const elseBranch = match<TokenType::ELSE>() ? std::optional(statement()) : std::nullopt;
+    return IfStmt(condition, thenBranch, elseBranch);
 }
 
-PrintStmt const* Parser::printStatement() {
+PrintStmt Parser::printStatement() {
     auto const value = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after value.");
-    return new PrintStmt(value);
+    return PrintStmt(value);
 }
 
-WhileStmt const* Parser::whileStatement() {
+WhileStmt Parser::whileStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'while'.");
     auto const condition = expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after condition.");
     auto const body = statement();
-    return new WhileStmt(condition, body);
+    return WhileStmt(condition, body);
 }
 
-ReturnStmt const* Parser::returnStatement() {
+ReturnStmt Parser::returnStatement() {
     auto const keyword = previous();
-    auto value = static_cast<Expr const*>(nullptr);
+    auto value = std::optional<xyz::polymorphic<Expr>>();
     if (!check<TokenType::SEMICOLON>()) {
         value = expression();
     }
     consume<TokenType::SEMICOLON>("Expect ';' after return value.");
-    return new ReturnStmt(keyword, value);
+    return ReturnStmt(keyword, value);
 }
 
-Stmt const* Parser::forStatement() {
+xyz::polymorphic<Stmt> Parser::forStatement() {
     consume<TokenType::LEFT_PAREN>("Expect '(' after 'for'.");
     
-    Stmt const* initializer;
+    auto initializer = std::optional<xyz::polymorphic<Stmt>>();
     if (match<TokenType::SEMICOLON>()) {
-        initializer = nullptr;
+        initializer = std::nullopt;
     }
     else if (match<TokenType::VAR>()) {
-        initializer = varDeclaration();
+        initializer = xyz::make_polymorphic<Stmt>(varDeclaration());
     }
     else {
-        initializer = expressionStatement();
+        initializer = xyz::make_polymorphic<Stmt>(expressionStatement());
     }
 
-    auto const condition = check<TokenType::SEMICOLON>() ? new LiteralExpr(true) : expression();
+    auto const condition = check<TokenType::SEMICOLON>() ? xyz::make_polymorphic<Expr>(LiteralExpr(true)) : expression();
     consume<TokenType::SEMICOLON>("Expect ';' after condition.");
 
-    auto const increment = check<TokenType::RIGHT_PAREN>() ? nullptr: expression();
+    auto const increment = check<TokenType::RIGHT_PAREN>() ? std::optional<xyz::polymorphic<Expr>>() : expression();
     consume<TokenType::RIGHT_PAREN>("Expect ')' after for clause.");
 
     auto body = statement();
 
     if (increment) {
-        body = new BlockStmt({ body, new ExpressionStmt(increment) });
+        body = xyz::make_polymorphic<Stmt>(BlockStmt({ body, xyz::make_polymorphic<Stmt>(ExpressionStmt(*increment)) }));
     }
 
-    body = new WhileStmt(condition, body);
+    body = xyz::make_polymorphic<Stmt>(WhileStmt(condition, body));
     
     if (initializer) {
-        body = new BlockStmt({ initializer, body });
+        body = xyz::make_polymorphic<Stmt>(BlockStmt({ *initializer, body }));
     }
 
     return body;
 }
 
-BlockStmt const* Parser::blockStatement() {
-    auto statements = std::vector<Stmt const*>();
+BlockStmt Parser::blockStatement() {
+    auto statements = std::vector<xyz::polymorphic<Stmt>>();
 
     while (!check<TokenType::RIGHT_BRACE>() && !isAtEnd()) {
         statements.push_back(declaration());
     }
     
     consume<TokenType::RIGHT_BRACE>("Expect '}' after block.");
-    return new BlockStmt(statements);
+    return BlockStmt(statements);
 }
 
-ExpressionStmt const* Parser::expressionStatement() {
+ExpressionStmt Parser::expressionStatement() {
     auto const expr = expression();
     consume<TokenType::SEMICOLON>("Expect ';' after expression.");
-    return new ExpressionStmt(expr);
+    return ExpressionStmt(expr);
 }
 
-FunctionStmt const* Parser::function(std::string const& kind) {
+FunctionStmt Parser::function(std::string const& kind) {
     auto const name = consume<TokenType::IDENTIFIER>("Expect " + kind + " name.");
     consume<TokenType::LEFT_PAREN>("Expect '(' after " + kind + " name.");
     std::vector<Token> parameters;
@@ -238,26 +239,26 @@ FunctionStmt const* Parser::function(std::string const& kind) {
     consume<TokenType::RIGHT_PAREN>("Expect ')' after " + kind + " name.");
     consume<TokenType::LEFT_BRACE>("Expect '{' before " + kind + " body.");
     auto const body = blockStatement();
-    return new FunctionStmt(name, parameters, *body);
+    return FunctionStmt(name, parameters, body);
 }
 
-Expr const* Parser::expression() {
+xyz::polymorphic<Expr> Parser::expression() {
     return assignment();
 }
 
-Expr const* Parser::assignment() {
+xyz::polymorphic<Expr> Parser::assignment() {
     auto const expr = oor();
 
     if (match<TokenType::EQUAL>()) {
         auto const equals = previous();
         auto const value = assignment();
 
-        if (auto const variableExpr = dynamic_cast<VariableExpr const*>(expr)) {
+        if (auto const variableExpr = dynamic_cast<VariableExpr const*>(xyz::get_raw_pointer(expr))) {
             auto const name = variableExpr->name();
-            return new AssignExpr(name, value);
+            return xyz::make_polymorphic<Expr>(AssignExpr(name, value));
         }
-        else if (auto const getExpr = dynamic_cast<GetExpr const*>(expr)) {
-            return new SetExpr(&getExpr->object(), getExpr->name(), value);
+        else if (auto const getExpr = dynamic_cast<GetExpr const*>(xyz::get_raw_pointer(expr))) {
+            return xyz::make_polymorphic<Expr>(SetExpr(getExpr->object(), getExpr->name(), value));
         }
 
         throw ParseError(equals, "Invalid assignment target.");
@@ -266,87 +267,87 @@ Expr const* Parser::assignment() {
     return expr;
 }
 
-Expr const* Parser::oor() {
+xyz::polymorphic<Expr> Parser::oor() {
     auto expr = aand();
 
     while (match<TokenType::OR>()) {
         auto const operatr = previous();
         auto const right = aand();
-        expr = new LogicalExpr(expr, operatr, right);
+        expr = xyz::make_polymorphic<Expr>(LogicalExpr(expr, operatr, right));
     }
 
     return expr;
 }
-Expr const* Parser::aand() {
+xyz::polymorphic<Expr> Parser::aand() {
     auto expr = equality();
 
     while (match<TokenType::AND>()) {
         auto const operatr = previous();
         auto const right = equality();
-        expr = new LogicalExpr(expr, operatr, right);
+        expr = xyz::make_polymorphic<Expr>(LogicalExpr(expr, operatr, right));
     }
 
     return expr;
 }
 
-Expr const* Parser::equality() {
+xyz::polymorphic<Expr> Parser::equality() {
     auto expr = comparison();
     while (match<TokenType::BANG_EQUAL, TokenType::EQUAL_EQUAL>()) {
         auto const operatr = previous();
         auto const right = comparison();
-        expr = new BinaryExpr(expr, operatr, right);
+        expr = xyz::make_polymorphic<Expr>(BinaryExpr(expr, operatr, right));
     }
 
     return expr;
 }
 
-Expr const* Parser::comparison() {
+xyz::polymorphic<Expr> Parser::comparison() {
     auto expr = term();
 
     while (match<TokenType::GREATER, TokenType::GREATER_EQUAL, TokenType::LESS, TokenType::LESS_EQUAL>()) {
         auto const operatr = previous();
         auto const right = term();
-        expr = new BinaryExpr(expr, operatr, right);;
+        expr = xyz::make_polymorphic<Expr>(BinaryExpr(expr, operatr, right));
     }
 
     return expr;
 }
 
-Expr const* Parser::term() {
+xyz::polymorphic<Expr> Parser::term() {
     auto expr = factor();
 
     while (match<TokenType::MINUS, TokenType::PLUS>()) {
         auto const operatr = previous();
         auto const right = factor();
-        expr = new BinaryExpr(expr, operatr, right);;
+        expr = xyz::make_polymorphic<Expr>(BinaryExpr(expr, operatr, right));
     }
 
     return expr;
 }
 
-Expr const* Parser::factor() {
+xyz::polymorphic<Expr> Parser::factor() {
     auto expr = unary();
 
     while (match<TokenType::SLASH, TokenType::STAR>()) {
         auto const operatr = previous();
         auto const right = unary();
-        expr = new BinaryExpr(expr, operatr, right);;
+        expr = xyz::make_polymorphic<Expr>(BinaryExpr(expr, operatr, right));
     }
 
     return expr;
 }
 
-Expr const* Parser::unary() {
+xyz::polymorphic<Expr> Parser::unary() {
     if (match<TokenType::BANG, TokenType::MINUS>()) {
         auto const operatr = previous();
         auto const right = unary();
-        return new UnaryExpr(operatr, right);
+        return xyz::make_polymorphic<Expr>(UnaryExpr(operatr, right));
     }
 
     return call();
 }
 
-Expr const* Parser::call() {
+xyz::polymorphic<Expr> Parser::call() {
     auto expr = primary();
 
     while (true) {
@@ -355,7 +356,7 @@ Expr const* Parser::call() {
         }
         else if (match<TokenType::DOT>()) {
             auto const name = consume<TokenType::IDENTIFIER>("Expect property name after '.'.");
-            expr = new GetExpr(expr, name);
+            expr = xyz::make_polymorphic<Expr>(GetExpr(expr, name));
         }
         else {
             break;
@@ -365,8 +366,8 @@ Expr const* Parser::call() {
     return expr;
 }
 
-Expr const* Parser::finishCall(Expr const* callee) {
-    auto arguments = std::vector<Expr const*>();
+xyz::polymorphic<Expr> Parser::finishCall(xyz::polymorphic<Expr> callee) {
+    auto arguments = std::vector<xyz::polymorphic<Expr>>();
     if (!check<TokenType::RIGHT_PAREN>())
     {
         do {
@@ -379,38 +380,38 @@ Expr const* Parser::finishCall(Expr const* callee) {
 
     auto const paren = consume<TokenType::RIGHT_PAREN>("Expect ')' after arguments.");
 
-    return new CallExpr(callee, paren, arguments);
+    return xyz::make_polymorphic<Expr>(CallExpr(callee, paren, arguments));
 
 }   
 
-Expr const* Parser::primary() {
-    if (match<TokenType::FALSE>()) return new LiteralExpr(false);
-    if (match<TokenType::TRUE>()) return new LiteralExpr(true);
-    if (match<TokenType::NIL>()) return new LiteralExpr({});
+xyz::polymorphic<Expr> Parser::primary() {
+    if (match<TokenType::FALSE>()) return xyz::make_polymorphic<Expr>(LiteralExpr(false));
+    if (match<TokenType::TRUE>()) return xyz::make_polymorphic<Expr>(LiteralExpr(true));
+    if (match<TokenType::NIL>()) return xyz::make_polymorphic<Expr>(LiteralExpr({}));
     
     if (match<TokenType::SUPER>()) {
         auto const keyword = previous();
         consume<TokenType::DOT>("Expect '.' after super.");
         auto const method = consume<TokenType::IDENTIFIER>("Expect superclass method name.");
-        return new SuperExpr(keyword, method);
+        return xyz::make_polymorphic<Expr>(SuperExpr(keyword, method));
     }
 
     if (match<TokenType::NUMBER, TokenType::STRING>()) {
-        return new LiteralExpr(previous().literal());
+        return xyz::make_polymorphic<Expr>(LiteralExpr(previous().literal()));
     }
 
     if (match<TokenType::THIS>()) {
-        return new ThisExpr(previous());
+        return xyz::make_polymorphic<Expr>(ThisExpr(previous()));
     }
 
     if (match<TokenType::IDENTIFIER>()) {
-        return new VariableExpr(previous());
+        return xyz::make_polymorphic<Expr>(VariableExpr(previous()));
     }
 
     if (match<TokenType::LEFT_PAREN>()) {
         auto const expr = expression();
         consume<TokenType::RIGHT_PAREN>("Expect ')' after expression.");
-        return new GroupingExpr(expr);
+        return xyz::make_polymorphic<Expr>(GroupingExpr(expr));
     }
 
     throw ParseError(peek(), "Expect expression.");
@@ -454,7 +455,7 @@ Token const& Parser::previous() const {
     return mTokens.at(mCurrent - 1);
 }
 
-std::vector<Stmt const*> parse(std::vector<Token> const& tokens) {
+std::vector<xyz::polymorphic<Stmt>> parse(std::vector<Token> const& tokens) {
     try {
         auto parser = Parser(tokens);
         return parser.parse();
